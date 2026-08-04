@@ -244,6 +244,14 @@ def main():
     .charts {{ grid-template-columns: 1fr; }}
     .chart-canvas-wrap {{ height: 300px; }}
   }}
+  .tabela-scroll {{
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+    -webkit-overflow-scrolling: touch;
+  }}
   table.dados {{
     width: 100%;
     border-collapse: collapse;
@@ -252,7 +260,7 @@ def main():
     border-radius: 14px;
     overflow: hidden;
     font-size: 13px;
-    box-shadow: var(--shadow);
+    table-layout: auto;
   }}
   table.dados th {{
     text-align: left;
@@ -266,6 +274,12 @@ def main():
     user-select: none;
     white-space: nowrap;
   }}
+  table.dados th abbr {{ text-decoration: none; border-bottom: 1px dotted rgba(255,255,255,0.6); cursor: help; }}
+  table.dados td, table.dados th {{ white-space: nowrap; }}
+  th.col-deposito, td.col-deposito {{ background: #eef6ff; text-align: center; }}
+  td.col-deposito {{ font-weight: 700; font-family: 'Poppins', sans-serif; }}
+  td.col-deposito.tem-foco {{ color: var(--azul); }}
+  td.col-deposito.sem-foco {{ color: #9aa5b1; font-weight: 500; }}
   table.dados th:hover {{ background: #013a86; }}
   table.dados th .seta {{ font-size: 10px; opacity: 0.7; margin-left: 4px; }}
   table.dados td {{ padding: 9px 14px; border-top: 1px solid var(--border); }}
@@ -323,7 +337,7 @@ def main():
   <div class="marca">
     <img src="assets/logo_pmpp.png" alt="Prefeitura Municipal de Ponta Porã">
     <div class="titulos">
-      <h1>Vigilância Epidemiológica — LIRAa</h1>
+      <h1>Setor de Endemias e Vetores — LIRAa</h1>
       <p class="subtitulo-app" id="subtitulo"></p>
     </div>
   </div>
@@ -356,12 +370,20 @@ def main():
   <h2>Consolidado por estrato</h2>
 </div>
 
-<table class="dados" style="margin-bottom:28px;">
+<div class="tabela-scroll">
+<table class="dados">
   <thead>
     <tr>
       <th>Estrato</th>
       <th>Imóveis vistoriados</th>
       <th class="col-tubitos">Tubitos (focos)</th>
+      <th class="col-deposito"><abbr title="A1 — Depósitos elevados (caixa d'água, cisterna)">A1</abbr></th>
+      <th class="col-deposito"><abbr title="A2 — Depósitos ao nível do solo (tambor, tonel, barril)">A2</abbr></th>
+      <th class="col-deposito"><abbr title="B — Depósitos móveis (vasos, garrafas, bebedouros)">B</abbr></th>
+      <th class="col-deposito"><abbr title="C — Depósitos fixos (ralos, calhas, lajes)">C</abbr></th>
+      <th class="col-deposito"><abbr title="D1 — Pneus e sucatas">D1</abbr></th>
+      <th class="col-deposito"><abbr title="D2 — Lixo (recipientes descartáveis)">D2</abbr></th>
+      <th class="col-deposito"><abbr title="E — Depósitos naturais (ocos de árvore, bromélias, rochas)">E</abbr></th>
       <th>Depósitos Ae. aegypti</th>
       <th>Imóveis c/ Ae. aegypti</th>
       <th>Imóveis c/ Ae. albopictus</th>
@@ -371,6 +393,7 @@ def main():
   </thead>
   <tbody id="corpoConsolidado"></tbody>
 </table>
+</div>
 
 <div class="charts">
   <div class="chart-box">
@@ -383,6 +406,13 @@ def main():
   </div>
 </div>
 
+<div class="charts">
+  <div class="chart-box" style="grid-column: 1 / -1;">
+    <p class="chart-titulo">Depósitos com foco por tipo (qual predomina)</p>
+    <div class="chart-canvas-wrap"><canvas id="chartDepositos"></canvas></div>
+  </div>
+</div>
+
 <div class="tabela-controles">
   <h2>Detalhamento por área</h2>
   <div style="display:flex; align-items:center; gap:14px;">
@@ -391,6 +421,7 @@ def main():
   </div>
 </div>
 
+<div class="tabela-scroll">
 <table class="dados">
   <thead>
     <tr>
@@ -398,6 +429,13 @@ def main():
       <th data-campo="area">Área</th>
       <th data-campo="Total_Imoveis">Imóveis vistoriados</th>
       <th class="col-tubitos" data-campo="Tubitos">Tubitos (focos)</th>
+      <th class="col-deposito" data-campo="A1"><abbr title="A1 — Depósitos elevados (caixa d'água, cisterna)">A1</abbr></th>
+      <th class="col-deposito" data-campo="A2"><abbr title="A2 — Depósitos ao nível do solo (tambor, tonel, barril)">A2</abbr></th>
+      <th class="col-deposito" data-campo="B"><abbr title="B — Depósitos móveis (vasos, garrafas, bebedouros)">B</abbr></th>
+      <th class="col-deposito" data-campo="C"><abbr title="C — Depósitos fixos (ralos, calhas, lajes)">C</abbr></th>
+      <th class="col-deposito" data-campo="D1"><abbr title="D1 — Pneus e sucatas">D1</abbr></th>
+      <th class="col-deposito" data-campo="D2"><abbr title="D2 — Lixo (recipientes descartáveis)">D2</abbr></th>
+      <th class="col-deposito" data-campo="E"><abbr title="E — Depósitos naturais (ocos de árvore, bromélias, rochas)">E</abbr></th>
       <th data-campo="Total_Aegypti">Depósitos Ae. aegypti</th>
       <th data-campo="Total_Imoveis_Aegypti">Imóveis c/ Ae. aegypti</th>
       <th data-campo="Total_Imoveis_Albopictus">Imóveis c/ Ae. albopictus</th>
@@ -405,6 +443,7 @@ def main():
   </thead>
   <tbody id="corpoTabela"></tbody>
 </table>
+</div>
 
 <footer>Gerado automaticamente a partir do eVisita/PNCD — <strong>Prefeitura Municipal de Ponta Porã</strong>, Secretaria Municipal de Saúde.</footer>
 
@@ -435,6 +474,7 @@ def main():
 
   let chartEstratos = null;
   let chartHistorico = null;
+  let chartDepositos = null;
   let linhasAtuais = [];
   let ordenarCampo = null;
   let ordenarAsc = true;
@@ -457,14 +497,21 @@ def main():
 
     const corpo = document.getElementById("corpoTabela");
     corpo.innerHTML = "";
+    const codigosDeposito = ["A1", "A2", "B", "C", "D1", "D2", "E"];
     linhas.forEach(l => {{
       const tr = document.createElement("tr");
       const classeTubitos = l.Tubitos > 0 ? "tem-foco" : "sem-foco";
+      const celulasDeposito = codigosDeposito.map(cod => {{
+        const v = l[cod] || 0;
+        const classe = v > 0 ? "tem-foco" : "sem-foco";
+        return `<td class="col-deposito ${{classe}}">${{v}}</td>`;
+      }}).join("");
       tr.innerHTML = `
         <td>${{l.estrato}}</td>
         <td>${{l.area}}</td>
         <td>${{l.Total_Imoveis}}</td>
         <td class="col-tubitos ${{classeTubitos}}">${{l.Tubitos}}</td>
+        ${{celulasDeposito}}
         <td>${{l.Total_Aegypti}}</td>
         <td>${{l.Total_Imoveis_Aegypti}}</td>
         <td>${{l.Total_Imoveis_Albopictus}}</td>
@@ -551,6 +598,15 @@ def main():
 
     const corpoConsolidado = document.getElementById("corpoConsolidado");
     corpoConsolidado.innerHTML = "";
+    const codigosDeposito = ["A1", "A2", "B", "C", "D1", "D2", "E"];
+
+    function celulasDepositoDe(obj) {{
+      return codigosDeposito.map(cod => {{
+        const v = obj[cod] || 0;
+        const classe = v > 0 ? "tem-foco" : "sem-foco";
+        return `<td class="col-deposito ${{classe}}">${{v}}</td>`;
+      }}).join("");
+    }}
 
     nomesEstratos.forEach(nome => {{
       const t = snap.estratos[nome].total;
@@ -560,6 +616,7 @@ def main():
         <td>${{nome}}</td>
         <td>${{t.Total_Imoveis || 0}}</td>
         <td class="col-tubitos ${{(t.Tubitos || 0) > 0 ? 'tem-foco' : 'sem-foco'}}">${{t.Tubitos || 0}}</td>
+        ${{celulasDepositoDe(t)}}
         <td>${{t.Total_Aegypti || 0}}</td>
         <td>${{t.Total_Imoveis_Aegypti || 0}}</td>
         <td>${{t.Total_Imoveis_Albopictus || 0}}</td>
@@ -576,6 +633,7 @@ def main():
       <td>TOTAL GERAL</td>
       <td>${{tg.Total_Imoveis || 0}}</td>
       <td class="col-tubitos">${{tg.Tubitos || 0}}</td>
+      ${{celulasDepositoDe(tg)}}
       <td>${{tg.Total_Aegypti || 0}}</td>
       <td>${{tg.Total_Imoveis_Aegypti || 0}}</td>
       <td>${{tg.Total_Imoveis_Albopictus || 0}}</td>
@@ -592,6 +650,13 @@ def main():
           area: area.AREA || "",
           Total_Imoveis: area.Total_Imoveis || 0,
           Tubitos: area.Tubitos || 0,
+          A1: area.A1 || 0,
+          A2: area.A2 || 0,
+          B: area.B || 0,
+          C: area.C || 0,
+          D1: area.D1 || 0,
+          D2: area.D2 || 0,
+          E: area.E || 0,
           Total_Aegypti: area.Total_Aegypti || 0,
           Total_Imoveis_Aegypti: area.Total_Imoveis_Aegypti || 0,
           Total_Imoveis_Albopictus: area.Total_Imoveis_Albopictus || 0,
@@ -642,6 +707,60 @@ def main():
       }});
     }} catch (e) {{
       console.error("Não foi possível carregar o gráfico de estratos:", e);
+    }}
+
+    const codigosDep = ["A1", "A2", "B", "C", "D1", "D2", "E"];
+    const nomesDep = [
+      "A1 — Elevados (caixa d'água)",
+      "A2 — Nível do solo (tambor, tonel)",
+      "B — Móveis (vasos, garrafas)",
+      "C — Fixos (ralos, calhas, lajes)",
+      "D1 — Pneus e sucatas",
+      "D2 — Lixo (descartáveis)",
+      "E — Naturais (ocos, bromélias)"
+    ];
+    const valoresDep = codigosDep.map(cod => tg[cod] || 0);
+    const maiorValor = Math.max(...valoresDep);
+    const coresDep = valoresDep.map(v => (v === maiorValor && v > 0) ? "#c62828" : CORES.azul);
+
+    if (chartDepositos) chartDepositos.destroy();
+    try {{
+      chartDepositos = new Chart(document.getElementById('chartDepositos'), {{
+        type: 'bar',
+        data: {{
+          labels: nomesDep,
+          datasets: [{{
+            label: 'Depósitos com foco',
+            data: valoresDep,
+            backgroundColor: coresDep,
+            borderRadius: 8,
+            maxBarThickness: 60
+          }}]
+        }},
+        options: {{
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {{ padding: {{ top: 4, right: 16, bottom: 0, left: 0 }} }},
+          plugins: {{
+            legend: {{ display: false }},
+            tooltip: {{
+              backgroundColor: CORES.marinho,
+              titleFont: {{ family: 'Poppins', size: 13, weight: '600' }},
+              bodyFont: {{ family: 'Inter', size: 13 }},
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {{ label: (ctx) => ` ${{ctx.parsed.x}} depósito(s) com foco` }}
+            }}
+          }},
+          scales: {{
+            x: {{ beginAtZero: true, ticks: {{ color: corTexto, font: {{ family: 'Inter', size: 12 }}, precision: 0 }}, grid: {{ color: corGrade }} }},
+            y: {{ ticks: {{ color: corTexto, font: {{ family: 'Inter', size: 12 }} }}, grid: {{ display: false }} }}
+          }}
+        }}
+      }});
+    }} catch (e) {{
+      console.error("Não foi possível carregar o gráfico de depósitos:", e);
     }}
   }}
 
