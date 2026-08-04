@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-04T15:44:54.502437-04:00",
+    "gerado_em": "2026-08-04T16:12:44.089932-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -2496,13 +2496,13 @@
           },
           {
             "AREA": "434 - VILA AUREA - ESTRATO 3",
-            "Tubitos": 2,
-            "Residencia": 15,
+            "Tubitos": 5,
+            "Residencia": 20,
             "Comercio": 1,
-            "TB": 7,
+            "TB": 11,
             "Outros": 2,
             "PE": 0,
-            "Total_Imoveis": 25,
+            "Total_Imoveis": 34,
             "A1": 0,
             "A2": 1,
             "B": 0,
@@ -2609,13 +2609,13 @@
         ],
         "total": {
           "AREA": "TOTAL ESTRATO 3",
-          "Tubitos": 9,
-          "Residencia": 170,
+          "Tubitos": 12,
+          "Residencia": 175,
           "Comercio": 10,
-          "TB": 71,
+          "TB": 75,
           "Outros": 13,
           "PE": 0,
-          "Total_Imoveis": 264,
+          "Total_Imoveis": 273,
           "A1": 0,
           "A2": 1,
           "B": 0,
@@ -2634,7 +2634,7 @@
           "TB_Albopictus": 1,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 1,
-          "IIP": 0.38
+          "IIP": 0.37
         }
       },
       "Estrato 4": {
@@ -3009,13 +3009,13 @@
     },
     "total_geral": {
       "AREA": "TOTAL GERAL",
-      "Tubitos": 20,
-      "Residencia": 444,
+      "Tubitos": 23,
+      "Residencia": 449,
       "Comercio": 44,
-      "TB": 212,
+      "TB": 216,
       "Outros": 39,
       "PE": 0,
-      "Total_Imoveis": 739,
+      "Total_Imoveis": 748,
       "A1": 0,
       "A2": 3,
       "B": 2,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 1,
-      "IIP": 0.81
+      "IIP": 0.8
     }
   }
 }
