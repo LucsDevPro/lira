@@ -68,6 +68,7 @@ def main():
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {{
     --marinho: {COR_MARINHO};
@@ -146,6 +147,53 @@ def main():
     cursor: pointer;
   }}
   select#seletorSemana:focus {{ outline: 2px solid var(--azul); }}
+
+  .acoes-topo {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
+  .botao {{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--panel);
+    color: var(--marinho);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }}
+  .botao:hover {{ background: #eef4fb; border-color: var(--azul); }}
+  .botao.primario {{ background: var(--azul); color: #ffffff; border-color: var(--azul); }}
+  .botao.primario:hover {{ background: var(--marinho); border-color: var(--marinho); }}
+  .botao.excel {{ background: var(--verde); color: #ffffff; border-color: var(--verde); }}
+  .botao.excel:hover {{ background: #009630; border-color: #009630; }}
+  .botao-mini {{
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1.5px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+  }}
+  .botao-mini:hover {{ background: #eef4fb; border-color: var(--azul); color: var(--azul); }}
+
+  @media print {{
+    .no-print {{ display: none !important; }}
+    body {{ background: #fff; padding: 0; }}
+    .topbar {{ display: none; }}
+    header.institucional {{ box-shadow: none; border-bottom: 2px solid var(--marinho); }}
+    .tabela-scroll {{ overflow: visible !important; box-shadow: none; }}
+    .card, .chart-box, .resumo {{ box-shadow: none; border: 1px solid #ccc; }}
+    @page {{ size: landscape; margin: 12mm; }}
+  }}
 
   main {{ padding: 28px 32px 0; max-width: 1280px; margin: 0 auto; }}
 
@@ -341,7 +389,11 @@ def main():
       <p class="subtitulo-app" id="subtitulo"></p>
     </div>
   </div>
-  <select id="seletorSemana"></select>
+  <div class="acoes-topo no-print">
+    <select id="seletorSemana"></select>
+    <button class="botao excel" id="btnExcel" title="Baixa os dados do período selecionado em Excel">⬇ Baixar Excel</button>
+    <button class="botao primario" id="btnImprimirTudo" title="Imprime o relatório completo">🖶 Imprimir relatório</button>
+  </div>
 </header>
 
 <main>
@@ -368,9 +420,10 @@ def main():
 
 <div class="tabela-controles">
   <h2>Consolidado por estrato</h2>
+  <button class="botao-mini no-print" id="btnImprimirConsolidado">🖶 Imprimir esta tabela</button>
 </div>
 
-<div class="tabela-scroll">
+<div class="tabela-scroll" id="secaoConsolidado">
 <table class="dados">
   <thead>
     <tr>
@@ -418,10 +471,11 @@ def main():
   <div style="display:flex; align-items:center; gap:14px;">
     <span id="contadorAreas"></span>
     <span class="dica-ordenar">Clique numa coluna para ordenar (numérico ou alfabético)</span>
+    <button class="botao-mini no-print" id="btnImprimirDetalhe">🖶 Imprimir esta tabela</button>
   </div>
 </div>
 
-<div class="tabela-scroll">
+<div class="tabela-scroll" id="secaoDetalhe">
 <table class="dados">
   <thead>
     <tr>
@@ -710,15 +764,15 @@ def main():
     }}
 
     const codigosDep = ["A1", "A2", "B", "C", "D1", "D2", "E"];
-    const nomesDep = [
-      "A1 — Elevados (caixa d'água)",
-      "A2 — Nível do solo (tambor, tonel)",
-      "B — Móveis (vasos, garrafas)",
-      "C — Fixos (ralos, calhas, lajes)",
-      "D1 — Pneus e sucatas",
-      "D2 — Lixo (descartáveis)",
-      "E — Naturais (ocos, bromélias)"
-    ];
+    const descricoesDep = {{
+      A1: "Depósitos elevados (caixa d'água, cisterna)",
+      A2: "Depósitos ao nível do solo (tambor, tonel, barril)",
+      B: "Depósitos móveis (vasos, garrafas, bebedouros)",
+      C: "Depósitos fixos (ralos, calhas, lajes)",
+      D1: "Pneus e sucatas",
+      D2: "Lixo (recipientes descartáveis)",
+      E: "Depósitos naturais (ocos de árvore, bromélias, rochas)"
+    }};
     const valoresDep = codigosDep.map(cod => tg[cod] || 0);
     const maiorValor = Math.max(...valoresDep);
     const coresDep = valoresDep.map(v => (v === maiorValor && v > 0) ? "#c62828" : CORES.azul);
@@ -728,7 +782,7 @@ def main():
       chartDepositos = new Chart(document.getElementById('chartDepositos'), {{
         type: 'bar',
         data: {{
-          labels: nomesDep,
+          labels: codigosDep,
           datasets: [{{
             label: 'Depósitos com foco',
             data: valoresDep,
@@ -750,7 +804,10 @@ def main():
               bodyFont: {{ family: 'Inter', size: 13 }},
               padding: 10,
               cornerRadius: 8,
-              callbacks: {{ label: (ctx) => ` ${{ctx.parsed.x}} depósito(s) com foco` }}
+              callbacks: {{
+                title: (items) => descricoesDep[items[0].label] || items[0].label,
+                label: (ctx) => ` ${{ctx.parsed.x}} depósito(s) com foco`
+              }}
             }}
           }},
           scales: {{
@@ -842,6 +899,91 @@ def main():
   }} catch (e) {{
     console.error("Não foi possível carregar o gráfico de histórico:", e);
   }}
+
+  // ---------- Impressão ----------
+
+  function imprimirElemento(idSecao, titulo) {{
+    const el = document.getElementById(idSecao);
+    if (!el) return;
+
+    const janela = window.open("", "_blank");
+    janela.document.write(`
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${{titulo}}</title>
+        <style>
+          @page {{ size: landscape; margin: 12mm; }}
+          body {{ font-family: 'Inter', Arial, sans-serif; color: #1c2733; padding: 10px; }}
+          h1 {{ font-family: 'Poppins', Arial, sans-serif; color: ${{CORES.marinho}}; font-size: 18px; margin-bottom: 4px; }}
+          p.legenda {{ color: #67758a; font-size: 12px; margin-top: 0; margin-bottom: 16px; }}
+          table {{ width: 100%; border-collapse: collapse; font-size: 11px; }}
+          th {{ background: ${{CORES.marinho}}; color: #fff; padding: 7px 8px; text-align: left; }}
+          td {{ padding: 5px 8px; border-top: 1px solid #ddd; }}
+          tr.linha-total td {{ background: #eef2f8; font-weight: 700; border-top: 2px solid ${{CORES.marinho}}; }}
+          .badge-tabela {{ display:inline-block; padding:2px 8px; border-radius:12px; font-size:10px; font-weight:700; color:#fff; }}
+        </style>
+      </head>
+      <body>
+        <h1>${{titulo}}</h1>
+        <p class="legenda">Setor de Endemias e Vetores — Prefeitura Municipal de Ponta Porã · Impresso em ${{new Date().toLocaleString('pt-BR')}}</p>
+        ${{el.outerHTML}}
+      </body>
+      </html>
+    `);
+    janela.document.close();
+    janela.focus();
+    janela.onload = () => janela.print();
+    // fallback caso onload não dispare a tempo
+    setTimeout(() => janela.print(), 400);
+  }}
+
+  document.getElementById("btnImprimirConsolidado").addEventListener("click", () => {{
+    imprimirElemento("secaoConsolidado", "Consolidado por Estrato — LIRAa");
+  }});
+
+  document.getElementById("btnImprimirDetalhe").addEventListener("click", () => {{
+    imprimirElemento("secaoDetalhe", "Detalhamento por Área — LIRAa");
+  }});
+
+  document.getElementById("btnImprimirTudo").addEventListener("click", () => {{
+    window.print();
+  }});
+
+  // ---------- Excel ----------
+
+  const COLUNAS_EXCEL = [
+    "AREA", "Tubitos", "Residencia", "Comercio", "TB", "Outros", "PE", "Total_Imoveis",
+    "A1", "A2", "B", "C", "D1", "D2", "E", "Total_Aegypti",
+    "Resid_Aegypti", "Comercio_Aegypti", "TB_Aegypti", "Outros_Aegypti", "Total_Imoveis_Aegypti",
+    "Resid_Albopictus", "Comercio_Albopictus", "TB_Albopictus", "Outros_Albopictus", "Total_Imoveis_Albopictus"
+  ];
+
+  function baixarExcel() {{
+    const indice = parseInt(document.getElementById("seletorSemana").value);
+    const snap = SNAPSHOTS[indice];
+    const nomesEstratos = Object.keys(snap.estratos);
+    const wb = XLSX.utils.book_new();
+    const todasAreas = [];
+
+    nomesEstratos.forEach((nome, i) => {{
+      const bloco = snap.estratos[nome];
+      const linhas = bloco.areas.map(a => COLUNAS_EXCEL.map(c => a[c] ?? 0));
+      todasAreas.push(...linhas);
+      const linhaTotal = COLUNAS_EXCEL.map(c => c === "AREA" ? `TOTAL ${{nome.toUpperCase()}}` : (bloco.total[c] ?? 0));
+      const ws = XLSX.utils.aoa_to_sheet([COLUNAS_EXCEL, ...linhas, linhaTotal]);
+      XLSX.utils.book_append_sheet(wb, ws, `Estrato_${{i + 1}}`);
+    }});
+
+    const linhaTotalGeral = COLUNAS_EXCEL.map(c => c === "AREA" ? "TOTAL GERAL" : (snap.total_geral[c] ?? 0));
+    const wsTotal = XLSX.utils.aoa_to_sheet([COLUNAS_EXCEL, ...todasAreas, linhaTotalGeral]);
+    XLSX.utils.book_append_sheet(wb, wsTotal, "Total_Geral");
+
+    const nomeArquivo = `LIRA_${{snap.semana_inicio}}_${{snap.semana_fim}}.xlsx`;
+    XLSX.writeFile(wb, nomeArquivo);
+  }}
+
+  document.getElementById("btnExcel").addEventListener("click", baixarExcel);
 </script>
 
 </body>
