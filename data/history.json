@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-04T13:24:05.570636-04:00",
+    "gerado_em": "2026-08-04T13:51:02.202482-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -2552,13 +2552,13 @@
           },
           {
             "AREA": "432 - ÁREA B - RESIDENCIAL PONTA PORÃ 1 ESTRATO 3",
-            "Tubitos": 1,
-            "Residencia": 13,
+            "Tubitos": 2,
+            "Residencia": 26,
             "Comercio": 2,
             "TB": 5,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 20,
+            "Total_Imoveis": 33,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2609,13 +2609,13 @@
         ],
         "total": {
           "AREA": "TOTAL ESTRATO 3",
-          "Tubitos": 7,
-          "Residencia": 136,
+          "Tubitos": 8,
+          "Residencia": 149,
           "Comercio": 9,
           "TB": 52,
           "Outros": 11,
           "PE": 0,
-          "Total_Imoveis": 208,
+          "Total_Imoveis": 221,
           "A1": 0,
           "A2": 1,
           "B": 0,
@@ -2634,7 +2634,7 @@
           "TB_Albopictus": 1,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 1,
-          "IIP": 0.48
+          "IIP": 0.45
         }
       },
       "Estrato 4": {
@@ -3009,13 +3009,13 @@
     },
     "total_geral": {
       "AREA": "TOTAL GERAL",
-      "Tubitos": 18,
-      "Residencia": 383,
+      "Tubitos": 19,
+      "Residencia": 396,
       "Comercio": 40,
       "TB": 179,
       "Outros": 36,
       "PE": 0,
-      "Total_Imoveis": 638,
+      "Total_Imoveis": 651,
       "A1": 0,
       "A2": 2,
       "B": 1,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 1,
-      "IIP": 0.63
+      "IIP": 0.61
     }
   }
 }
