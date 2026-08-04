@@ -1,0 +1,53 @@
+name: Atualizar LIRAa
+
+on:
+  schedule:
+    # Horários em UTC. MS = UTC-4 (sem horário de verão).
+    - cron: '0 9 * * 1-5'    # 05:00 em MS, seg a sex
+    - cron: '0 16 * * 1-5'   # 12:00 (meio-dia) em MS, seg a sex
+    - cron: '0 23 * * 1-5'   # 19:00 em MS, seg a sex
+  workflow_dispatch: {}       # permite rodar manualmente pela aba Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lira-dashboard
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar Google Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Rodar scraper (coleta os dados do eVisita)
+        env:
+          LIRA_USUARIO: ${{ secrets.LIRA_USUARIO }}
+          LIRA_SENHA: ${{ secrets.LIRA_SENHA }}
+        run: python lira_scraper.py
+
+      - name: Gerar dashboard HTML
+        run: python generate_dashboard.py
+
+      - name: Publicar mudanças no repositório
+        run: |
+          git config user.name "lira-bot"
+          git config user.email "lira-bot@users.noreply.github.com"
+          git add data/ docs/
+          git diff --cached --quiet && echo "Nada novo para commitar" || git commit -m "Atualização automática LIRAa $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
