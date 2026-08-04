@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-04T11:00:37.216472-04:00",
+    "gerado_em": "2026-08-04T13:24:05.570636-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -2184,12 +2184,12 @@
           {
             "AREA": "422 - VILA TORRES - ESTRATO 2",
             "Tubitos": 0,
-            "Residencia": 11,
-            "Comercio": 1,
-            "TB": 2,
+            "Residencia": 16,
+            "Comercio": 3,
+            "TB": 3,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 14,
+            "Total_Imoveis": 22,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2213,12 +2213,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 2",
           "Tubitos": 3,
-          "Residencia": 63,
-          "Comercio": 8,
-          "TB": 17,
+          "Residencia": 68,
+          "Comercio": 10,
+          "TB": 18,
           "Outros": 3,
           "PE": 0,
-          "Total_Imoveis": 91,
+          "Total_Imoveis": 99,
           "A1": 0,
           "A2": 1,
           "B": 1,
@@ -2237,7 +2237,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 2.2
+          "IIP": 2.02
         }
       },
       "Estrato 3": {
@@ -3010,12 +3010,12 @@
     "total_geral": {
       "AREA": "TOTAL GERAL",
       "Tubitos": 18,
-      "Residencia": 378,
-      "Comercio": 38,
-      "TB": 178,
+      "Residencia": 383,
+      "Comercio": 40,
+      "TB": 179,
       "Outros": 36,
       "PE": 0,
-      "Total_Imoveis": 630,
+      "Total_Imoveis": 638,
       "A1": 0,
       "A2": 2,
       "B": 1,
