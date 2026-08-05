@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-04T20:06:44.475837-04:00",
+    "gerado_em": "2026-08-05T07:15:47.084686-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -1533,14 +1533,14 @@
       "Estrato 1": {
         "areas": [
           {
-            "AREA": "AREA_1236",
+            "AREA": "400 - JULIA CARDINAL - ESTRATO 1",
             "Tubitos": 0,
-            "Residencia": 0,
-            "Comercio": 0,
-            "TB": 0,
-            "Outros": 0,
+            "Residencia": 7,
+            "Comercio": 2,
+            "TB": 19,
+            "Outros": 2,
             "PE": 0,
-            "Total_Imoveis": 0,
+            "Total_Imoveis": 30,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -1674,13 +1674,13 @@
           },
           {
             "AREA": "405 - ALTOS DA GLORIA - ESTRATO 1",
-            "Tubitos": 0,
-            "Residencia": 9,
+            "Tubitos": 2,
+            "Residencia": 21,
             "Comercio": 1,
             "TB": 1,
             "Outros": 2,
             "PE": 0,
-            "Total_Imoveis": 13,
+            "Total_Imoveis": 25,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -1871,13 +1871,13 @@
         ],
         "total": {
           "AREA": "TOTAL ESTRATO 1",
-          "Tubitos": 4,
-          "Residencia": 165,
-          "Comercio": 26,
-          "TB": 100,
-          "Outros": 22,
+          "Tubitos": 6,
+          "Residencia": 184,
+          "Comercio": 28,
+          "TB": 119,
+          "Outros": 24,
           "PE": 0,
-          "Total_Imoveis": 313,
+          "Total_Imoveis": 355,
           "A1": 0,
           "A2": 1,
           "B": 1,
@@ -1896,7 +1896,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.64
+          "IIP": 0.56
         }
       },
       "Estrato 2": {
@@ -2642,12 +2642,12 @@
           {
             "AREA": "435 - JARDIM PRIMOR - ESTRATO 4",
             "Tubitos": 1,
-            "Residencia": 14,
-            "Comercio": 2,
-            "TB": 3,
-            "Outros": 0,
+            "Residencia": 29,
+            "Comercio": 7,
+            "TB": 8,
+            "Outros": 2,
             "PE": 0,
-            "Total_Imoveis": 19,
+            "Total_Imoveis": 46,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2726,12 +2726,12 @@
           {
             "AREA": "438 - JARDIM PLANALTO - ESTRATO 4",
             "Tubitos": 1,
-            "Residencia": 11,
-            "Comercio": 0,
-            "TB": 7,
+            "Residencia": 15,
+            "Comercio": 1,
+            "TB": 16,
             "Outros": 2,
             "PE": 0,
-            "Total_Imoveis": 20,
+            "Total_Imoveis": 34,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2979,12 +2979,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 4",
           "Tubitos": 5,
-          "Residencia": 180,
-          "Comercio": 14,
-          "TB": 115,
-          "Outros": 20,
+          "Residencia": 199,
+          "Comercio": 20,
+          "TB": 129,
+          "Outros": 22,
           "PE": 0,
-          "Total_Imoveis": 329,
+          "Total_Imoveis": 370,
           "A1": 0,
           "A2": 0,
           "B": 0,
@@ -3003,19 +3003,19 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.3
+          "IIP": 0.27
         }
       }
     },
     "total_geral": {
       "AREA": "TOTAL GERAL",
-      "Tubitos": 30,
-      "Residencia": 770,
-      "Comercio": 118,
-      "TB": 349,
-      "Outros": 81,
+      "Tubitos": 32,
+      "Residencia": 808,
+      "Comercio": 126,
+      "TB": 382,
+      "Outros": 85,
       "PE": 0,
-      "Total_Imoveis": 1318,
+      "Total_Imoveis": 1401,
       "A1": 0,
       "A2": 3,
       "B": 2,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 1,
-      "IIP": 0.46
+      "IIP": 0.43
     }
   }
 }
