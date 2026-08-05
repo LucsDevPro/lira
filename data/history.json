@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-05T15:29:13.400648-04:00",
+    "gerado_em": "2026-08-05T16:26:45.225764-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -2669,13 +2669,13 @@
           },
           {
             "AREA": "436 - VILA ALEGRETE - ESTRATO 4",
-            "Tubitos": 0,
-            "Residencia": 15,
+            "Tubitos": 1,
+            "Residencia": 22,
             "Comercio": 2,
             "TB": 8,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 25,
+            "Total_Imoveis": 32,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2894,12 +2894,12 @@
           {
             "AREA": "445 - JARDIM IVONE - ESTRATO 4",
             "Tubitos": 0,
-            "Residencia": 2,
+            "Residencia": 6,
             "Comercio": 0,
-            "TB": 6,
+            "TB": 9,
             "Outros": 1,
             "PE": 0,
-            "Total_Imoveis": 9,
+            "Total_Imoveis": 16,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2978,13 +2978,13 @@
         ],
         "total": {
           "AREA": "TOTAL ESTRATO 4",
-          "Tubitos": 5,
-          "Residencia": 206,
+          "Tubitos": 6,
+          "Residencia": 217,
           "Comercio": 21,
-          "TB": 135,
+          "TB": 138,
           "Outros": 22,
           "PE": 0,
-          "Total_Imoveis": 384,
+          "Total_Imoveis": 398,
           "A1": 0,
           "A2": 0,
           "B": 0,
@@ -3003,19 +3003,19 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.78
+          "IIP": 0.75
         }
       }
     },
     "total_geral": {
       "AREA": "TOTAL GERAL",
-      "Tubitos": 34,
-      "Residencia": 840,
+      "Tubitos": 35,
+      "Residencia": 851,
       "Comercio": 125,
-      "TB": 401,
+      "TB": 404,
       "Outros": 86,
       "PE": 0,
-      "Total_Imoveis": 1452,
+      "Total_Imoveis": 1466,
       "A1": 0,
       "A2": 4,
       "B": 6,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 2,
-      "IIP": 1.03
+      "IIP": 1.02
     }
   }
 }
