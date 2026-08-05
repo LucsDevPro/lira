@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-05T11:34:16.536108-04:00",
+    "gerado_em": "2026-08-05T13:31:19.027146-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -2415,10 +2415,10 @@
             "Tubitos": 2,
             "Residencia": 18,
             "Comercio": 0,
-            "TB": 10,
+            "TB": 13,
             "Outros": 3,
             "PE": 0,
-            "Total_Imoveis": 31,
+            "Total_Imoveis": 34,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2612,10 +2612,10 @@
           "Tubitos": 17,
           "Residencia": 271,
           "Comercio": 16,
-          "TB": 112,
+          "TB": 115,
           "Outros": 18,
           "PE": 0,
-          "Total_Imoveis": 417,
+          "Total_Imoveis": 420,
           "A1": 0,
           "A2": 2,
           "B": 1,
@@ -2634,7 +2634,7 @@
           "TB_Albopictus": 1,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 2,
-          "IIP": 1.2
+          "IIP": 1.19
         }
       },
       "Estrato 4": {
@@ -3012,10 +3012,10 @@
       "Tubitos": 34,
       "Residencia": 840,
       "Comercio": 125,
-      "TB": 398,
+      "TB": 401,
       "Outros": 86,
       "PE": 0,
-      "Total_Imoveis": 1449,
+      "Total_Imoveis": 1452,
       "A1": 0,
       "A2": 4,
       "B": 6,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 2,
-      "IIP": 1.04
+      "IIP": 1.03
     }
   }
 }
