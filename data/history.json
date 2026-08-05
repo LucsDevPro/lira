@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-05T07:15:47.084686-04:00",
+    "gerado_em": "2026-08-05T09:45:37.868228-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -1591,12 +1591,12 @@
           {
             "AREA": "402 - JARDIM MARAMBAIA - ESTRATO 1",
             "Tubitos": 0,
-            "Residencia": 11,
+            "Residencia": 23,
             "Comercio": 0,
-            "TB": 4,
+            "TB": 5,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 15,
+            "Total_Imoveis": 28,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -1872,12 +1872,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 1",
           "Tubitos": 6,
-          "Residencia": 184,
+          "Residencia": 196,
           "Comercio": 28,
-          "TB": 119,
+          "TB": 120,
           "Outros": 24,
           "PE": 0,
-          "Total_Imoveis": 355,
+          "Total_Imoveis": 368,
           "A1": 0,
           "A2": 1,
           "B": 1,
@@ -1896,7 +1896,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.56
+          "IIP": 0.54
         }
       },
       "Estrato 2": {
@@ -1904,8 +1904,8 @@
           {
             "AREA": "412 - COHAB - ESTRATO 2",
             "Tubitos": 0,
-            "Residencia": 16,
-            "Comercio": 1,
+            "Residencia": 17,
+            "Comercio": 0,
             "TB": 3,
             "Outros": 0,
             "PE": 0,
@@ -1933,8 +1933,8 @@
             "AREA": "413 - BAIRRO DA GRANJA - ESTRATO 2",
             "Tubitos": 0,
             "Residencia": 20,
-            "Comercio": 5,
-            "TB": 1,
+            "Comercio": 4,
+            "TB": 2,
             "Outros": 3,
             "PE": 0,
             "Total_Imoveis": 29,
@@ -2128,10 +2128,10 @@
           {
             "AREA": "420 - FERROVIARIA - ESTRATO 2",
             "Tubitos": 4,
-            "Residencia": 27,
+            "Residencia": 28,
             "Comercio": 4,
-            "TB": 4,
-            "Outros": 0,
+            "TB": 2,
+            "Outros": 1,
             "PE": 0,
             "Total_Imoveis": 35,
             "A1": 0,
@@ -2156,9 +2156,9 @@
           {
             "AREA": "421 - JARDIM IPANEMA - ESTRATO 2",
             "Tubitos": 0,
-            "Residencia": 23,
+            "Residencia": 22,
             "Comercio": 2,
-            "TB": 5,
+            "TB": 6,
             "Outros": 3,
             "PE": 0,
             "Total_Imoveis": 33,
@@ -2213,10 +2213,10 @@
         "total": {
           "AREA": "TOTAL ESTRATO 2",
           "Tubitos": 6,
-          "Residencia": 166,
-          "Comercio": 62,
+          "Residencia": 167,
+          "Comercio": 60,
           "TB": 31,
-          "Outros": 21,
+          "Outros": 22,
           "PE": 0,
           "Total_Imoveis": 280,
           "A1": 0,
@@ -2301,12 +2301,12 @@
           {
             "AREA": "425 - JARDIM ESTORIL - ESTRATO 3",
             "Tubitos": 0,
-            "Residencia": 17,
+            "Residencia": 26,
             "Comercio": 0,
-            "TB": 5,
+            "TB": 9,
             "Outros": 3,
             "PE": 0,
-            "Total_Imoveis": 25,
+            "Total_Imoveis": 38,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2329,12 +2329,12 @@
           {
             "AREA": "426 - NOVA PONTA PORÃ - ESTRATO 3",
             "Tubitos": 1,
-            "Residencia": 21,
+            "Residencia": 23,
             "Comercio": 1,
-            "TB": 19,
+            "TB": 21,
             "Outros": 2,
             "PE": 0,
-            "Total_Imoveis": 43,
+            "Total_Imoveis": 47,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2610,12 +2610,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 3",
           "Tubitos": 15,
-          "Residencia": 259,
+          "Residencia": 270,
           "Comercio": 16,
-          "TB": 103,
+          "TB": 109,
           "Outros": 18,
           "PE": 0,
-          "Total_Imoveis": 396,
+          "Total_Imoveis": 413,
           "A1": 0,
           "A2": 1,
           "B": 0,
@@ -2634,7 +2634,7 @@
           "TB_Albopictus": 1,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 1,
-          "IIP": 0.25
+          "IIP": 0.24
         }
       },
       "Estrato 4": {
@@ -2670,12 +2670,12 @@
           {
             "AREA": "436 - VILA ALEGRETE - ESTRATO 4",
             "Tubitos": 0,
-            "Residencia": 7,
-            "Comercio": 1,
-            "TB": 3,
+            "Residencia": 15,
+            "Comercio": 2,
+            "TB": 8,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 11,
+            "Total_Imoveis": 25,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2698,9 +2698,9 @@
           {
             "AREA": "437 - RESIDENCIAL PONTA PORA 2 - ESTRATO 4",
             "Tubitos": 1,
-            "Residencia": 21,
+            "Residencia": 20,
             "Comercio": 2,
-            "TB": 17,
+            "TB": 18,
             "Outros": 2,
             "PE": 0,
             "Total_Imoveis": 42,
@@ -2979,12 +2979,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 4",
           "Tubitos": 5,
-          "Residencia": 199,
-          "Comercio": 20,
-          "TB": 129,
+          "Residencia": 206,
+          "Comercio": 21,
+          "TB": 135,
           "Outros": 22,
           "PE": 0,
-          "Total_Imoveis": 370,
+          "Total_Imoveis": 384,
           "A1": 0,
           "A2": 0,
           "B": 0,
@@ -3003,19 +3003,19 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.27
+          "IIP": 0.26
         }
       }
     },
     "total_geral": {
       "AREA": "TOTAL GERAL",
       "Tubitos": 32,
-      "Residencia": 808,
-      "Comercio": 126,
-      "TB": 382,
-      "Outros": 85,
+      "Residencia": 839,
+      "Comercio": 125,
+      "TB": 395,
+      "Outros": 86,
       "PE": 0,
-      "Total_Imoveis": 1401,
+      "Total_Imoveis": 1445,
       "A1": 0,
       "A2": 3,
       "B": 2,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 1,
-      "IIP": 0.43
+      "IIP": 0.42
     }
   }
 }
