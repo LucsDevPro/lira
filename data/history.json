@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-05T20:03:49.865704-04:00",
+    "gerado_em": "2026-08-06T07:16:12.797161-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -1619,12 +1619,12 @@
           {
             "AREA": "403 - JARDIM UNIVERSITARIO - ESTRATO 1",
             "Tubitos": 0,
-            "Residencia": 19,
-            "Comercio": 4,
+            "Residencia": 22,
+            "Comercio": 5,
             "TB": 5,
             "Outros": 4,
             "PE": 0,
-            "Total_Imoveis": 32,
+            "Total_Imoveis": 36,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -1787,12 +1787,12 @@
           {
             "AREA": "409 - ANDREAZZA - ESTRATO 1",
             "Tubitos": 0,
-            "Residencia": 18,
-            "Comercio": 1,
-            "TB": 5,
-            "Outros": 4,
+            "Residencia": 34,
+            "Comercio": 5,
+            "TB": 10,
+            "Outros": 5,
             "PE": 0,
-            "Total_Imoveis": 28,
+            "Total_Imoveis": 54,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -1872,12 +1872,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 1",
           "Tubitos": 7,
-          "Residencia": 203,
-          "Comercio": 28,
-          "TB": 120,
-          "Outros": 25,
+          "Residencia": 222,
+          "Comercio": 33,
+          "TB": 125,
+          "Outros": 26,
           "PE": 0,
-          "Total_Imoveis": 376,
+          "Total_Imoveis": 406,
           "A1": 0,
           "A2": 1,
           "B": 2,
@@ -1896,7 +1896,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.8
+          "IIP": 0.74
         }
       },
       "Estrato 2": {
@@ -1932,12 +1932,12 @@
           {
             "AREA": "413 - BAIRRO DA GRANJA - ESTRATO 2",
             "Tubitos": 0,
-            "Residencia": 20,
-            "Comercio": 4,
-            "TB": 2,
+            "Residencia": 22,
+            "Comercio": 5,
+            "TB": 3,
             "Outros": 3,
             "PE": 0,
-            "Total_Imoveis": 29,
+            "Total_Imoveis": 33,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2044,12 +2044,12 @@
           {
             "AREA": "417 - CENTRO 3 - ESTRATO 2",
             "Tubitos": 0,
-            "Residencia": 11,
-            "Comercio": 3,
-            "TB": 3,
+            "Residencia": 20,
+            "Comercio": 9,
+            "TB": 4,
             "Outros": 6,
             "PE": 0,
-            "Total_Imoveis": 23,
+            "Total_Imoveis": 39,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2213,12 +2213,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 2",
           "Tubitos": 6,
-          "Residencia": 181,
-          "Comercio": 70,
-          "TB": 33,
+          "Residencia": 192,
+          "Comercio": 77,
+          "TB": 35,
           "Outros": 23,
           "PE": 0,
-          "Total_Imoveis": 307,
+          "Total_Imoveis": 327,
           "A1": 0,
           "A2": 1,
           "B": 3,
@@ -2237,7 +2237,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 1.3
+          "IIP": 1.22
         }
       },
       "Estrato 3": {
@@ -3010,12 +3010,12 @@
     "total_geral": {
       "AREA": "TOTAL GERAL",
       "Tubitos": 36,
-      "Residencia": 899,
-      "Comercio": 138,
-      "TB": 419,
-      "Outros": 90,
+      "Residencia": 929,
+      "Comercio": 150,
+      "TB": 426,
+      "Outros": 91,
       "PE": 0,
-      "Total_Imoveis": 1546,
+      "Total_Imoveis": 1596,
       "A1": 0,
       "A2": 4,
       "B": 6,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 2,
-      "IIP": 0.97
+      "IIP": 0.94
     }
   }
 }
