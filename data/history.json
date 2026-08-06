@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-06T10:38:14.019373-04:00",
+    "gerado_em": "2026-08-06T17:40:30.735701-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -1675,12 +1675,12 @@
           {
             "AREA": "405 - ALTOS DA GLORIA - ESTRATO 1",
             "Tubitos": 2,
-            "Residencia": 21,
-            "Comercio": 1,
-            "TB": 1,
+            "Residencia": 29,
+            "Comercio": 2,
+            "TB": 2,
             "Outros": 2,
             "PE": 0,
-            "Total_Imoveis": 25,
+            "Total_Imoveis": 35,
             "A1": 0,
             "A2": 0,
             "B": 1,
@@ -1813,14 +1813,14 @@
             "Total_Imoveis_Albopictus": 0
           },
           {
-            "AREA": "AREA_1419",
+            "AREA": "410 - SALGADO FILHO - ESTRATO 1",
             "Tubitos": 0,
-            "Residencia": 0,
-            "Comercio": 0,
+            "Residencia": 7,
+            "Comercio": 1,
             "TB": 0,
-            "Outros": 0,
+            "Outros": 1,
             "PE": 0,
-            "Total_Imoveis": 0,
+            "Total_Imoveis": 9,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -1872,12 +1872,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 1",
           "Tubitos": 7,
-          "Residencia": 222,
-          "Comercio": 33,
-          "TB": 125,
-          "Outros": 26,
+          "Residencia": 237,
+          "Comercio": 35,
+          "TB": 126,
+          "Outros": 27,
           "PE": 0,
-          "Total_Imoveis": 406,
+          "Total_Imoveis": 425,
           "A1": 0,
           "A2": 1,
           "B": 2,
@@ -1896,7 +1896,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.74
+          "IIP": 0.71
         }
       },
       "Estrato 2": {
@@ -1988,12 +1988,12 @@
           {
             "AREA": "415 - CENTRO 1 - ESTRATO 2",
             "Tubitos": 0,
-            "Residencia": 2,
-            "Comercio": 23,
+            "Residencia": 3,
+            "Comercio": 25,
             "TB": 5,
-            "Outros": 7,
+            "Outros": 8,
             "PE": 0,
-            "Total_Imoveis": 37,
+            "Total_Imoveis": 41,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2184,12 +2184,12 @@
           {
             "AREA": "422 - VILA TORRES - ESTRATO 2",
             "Tubitos": 0,
-            "Residencia": 21,
-            "Comercio": 4,
-            "TB": 4,
+            "Residencia": 34,
+            "Comercio": 8,
+            "TB": 7,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 29,
+            "Total_Imoveis": 49,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2213,12 +2213,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 2",
           "Tubitos": 6,
-          "Residencia": 194,
-          "Comercio": 100,
-          "TB": 41,
-          "Outros": 30,
+          "Residencia": 208,
+          "Comercio": 106,
+          "TB": 44,
+          "Outros": 31,
           "PE": 0,
-          "Total_Imoveis": 365,
+          "Total_Imoveis": 389,
           "A1": 0,
           "A2": 1,
           "B": 3,
@@ -2237,7 +2237,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 1.1
+          "IIP": 1.03
         }
       },
       "Estrato 3": {
@@ -2525,12 +2525,12 @@
           {
             "AREA": "433 - ÁREA A - RESIDENCIAL PONTA PORÃ 1 ESTRATO 3",
             "Tubitos": 0,
-            "Residencia": 14,
+            "Residencia": 19,
             "Comercio": 2,
-            "TB": 11,
+            "TB": 13,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 27,
+            "Total_Imoveis": 34,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2610,12 +2610,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 3",
           "Tubitos": 17,
-          "Residencia": 285,
+          "Residencia": 290,
           "Comercio": 18,
-          "TB": 126,
+          "TB": 128,
           "Outros": 19,
           "PE": 0,
-          "Total_Imoveis": 448,
+          "Total_Imoveis": 455,
           "A1": 0,
           "A2": 2,
           "B": 2,
@@ -2634,7 +2634,7 @@
           "TB_Albopictus": 1,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 2,
-          "IIP": 1.56
+          "IIP": 1.54
         }
       },
       "Estrato 4": {
@@ -2894,12 +2894,12 @@
           {
             "AREA": "445 - JARDIM IVONE - ESTRATO 4",
             "Tubitos": 0,
-            "Residencia": 6,
+            "Residencia": 9,
             "Comercio": 0,
-            "TB": 9,
+            "TB": 15,
             "Outros": 1,
             "PE": 0,
-            "Total_Imoveis": 16,
+            "Total_Imoveis": 25,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -2979,12 +2979,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 4",
           "Tubitos": 6,
-          "Residencia": 230,
+          "Residencia": 233,
           "Comercio": 22,
-          "TB": 140,
+          "TB": 146,
           "Outros": 23,
           "PE": 0,
-          "Total_Imoveis": 415,
+          "Total_Imoveis": 424,
           "A1": 0,
           "A2": 0,
           "B": 1,
@@ -3003,19 +3003,19 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.96
+          "IIP": 0.94
         }
       }
     },
     "total_geral": {
       "AREA": "TOTAL GERAL",
       "Tubitos": 36,
-      "Residencia": 931,
-      "Comercio": 173,
-      "TB": 432,
-      "Outros": 98,
+      "Residencia": 968,
+      "Comercio": 181,
+      "TB": 444,
+      "Outros": 100,
       "PE": 0,
-      "Total_Imoveis": 1634,
+      "Total_Imoveis": 1693,
       "A1": 0,
       "A2": 4,
       "B": 8,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 2,
-      "IIP": 1.1
+      "IIP": 1.06
     }
   }
 }
