@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-06T17:40:30.735701-04:00",
+    "gerado_em": "2026-08-06T21:45:30.376389-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -1675,12 +1675,12 @@
           {
             "AREA": "405 - ALTOS DA GLORIA - ESTRATO 1",
             "Tubitos": 2,
-            "Residencia": 29,
+            "Residencia": 30,
             "Comercio": 2,
             "TB": 2,
             "Outros": 2,
             "PE": 0,
-            "Total_Imoveis": 35,
+            "Total_Imoveis": 36,
             "A1": 0,
             "A2": 0,
             "B": 1,
@@ -1872,12 +1872,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 1",
           "Tubitos": 7,
-          "Residencia": 237,
+          "Residencia": 238,
           "Comercio": 35,
           "TB": 126,
           "Outros": 27,
           "PE": 0,
-          "Total_Imoveis": 425,
+          "Total_Imoveis": 426,
           "A1": 0,
           "A2": 1,
           "B": 2,
@@ -1896,7 +1896,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.71
+          "IIP": 0.7
         }
       },
       "Estrato 2": {
@@ -3010,12 +3010,12 @@
     "total_geral": {
       "AREA": "TOTAL GERAL",
       "Tubitos": 36,
-      "Residencia": 968,
+      "Residencia": 969,
       "Comercio": 181,
       "TB": 444,
       "Outros": 100,
       "PE": 0,
-      "Total_Imoveis": 1693,
+      "Total_Imoveis": 1694,
       "A1": 0,
       "A2": 4,
       "B": 8,
