@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-06T21:45:30.376389-04:00",
+    "gerado_em": "2026-08-07T05:55:10.112624-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -1815,12 +1815,12 @@
           {
             "AREA": "410 - SALGADO FILHO - ESTRATO 1",
             "Tubitos": 0,
-            "Residencia": 7,
-            "Comercio": 1,
-            "TB": 0,
-            "Outros": 1,
+            "Residencia": 15,
+            "Comercio": 2,
+            "TB": 5,
+            "Outros": 5,
             "PE": 0,
-            "Total_Imoveis": 9,
+            "Total_Imoveis": 27,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -1872,12 +1872,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 1",
           "Tubitos": 7,
-          "Residencia": 238,
-          "Comercio": 35,
-          "TB": 126,
-          "Outros": 27,
+          "Residencia": 246,
+          "Comercio": 36,
+          "TB": 131,
+          "Outros": 31,
           "PE": 0,
-          "Total_Imoveis": 426,
+          "Total_Imoveis": 444,
           "A1": 0,
           "A2": 1,
           "B": 2,
@@ -1896,7 +1896,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.7
+          "IIP": 0.68
         }
       },
       "Estrato 2": {
@@ -3010,12 +3010,12 @@
     "total_geral": {
       "AREA": "TOTAL GERAL",
       "Tubitos": 36,
-      "Residencia": 969,
-      "Comercio": 181,
-      "TB": 444,
-      "Outros": 100,
+      "Residencia": 977,
+      "Comercio": 182,
+      "TB": 449,
+      "Outros": 104,
       "PE": 0,
-      "Total_Imoveis": 1694,
+      "Total_Imoveis": 1712,
       "A1": 0,
       "A2": 4,
       "B": 8,
@@ -3034,7 +3034,7 @@
       "TB_Albopictus": 1,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 2,
-      "IIP": 1.06
+      "IIP": 1.05
     }
   }
 }
