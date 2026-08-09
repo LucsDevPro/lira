@@ -202,6 +202,7 @@ def main():
   .resumo {{
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 20px;
     background: var(--panel);
     border: 1px solid var(--border);
@@ -404,6 +405,11 @@ def main():
     <div class="iip-grande" id="iipGrande"></div>
     <div class="badge" id="badgeGeral"></div>
   </div>
+  <div style="border-left:1px solid var(--border); padding-left:20px;">
+    <div class="subtitulo">IB Geral (Índice de Breteau)</div>
+    <div class="iip-grande" id="ibGrande"></div>
+    <div class="badge" id="badgeIbGeral"></div>
+  </div>
   <div class="tubitos-destaque">
     <div class="numero" id="tubitosGrande"></div>
     <div class="rotulo">Tubitos recolhidos<br>(focos encontrados)</div>
@@ -429,6 +435,8 @@ def main():
     <tr>
       <th>Estrato</th>
       <th>Imóveis vistoriados</th>
+      <th><abbr title="Imóveis do tipo Terreno Baldio com foco encontrado">TB (com foco)</abbr></th>
+      <th><abbr title="Imóveis com foco encontrado: Residência + Comércio + Outros">Resto (com foco)</abbr></th>
       <th class="col-tubitos">Tubitos (focos)</th>
       <th class="col-deposito"><abbr title="A1 — Depósitos elevados (caixa d'água, cisterna)">A1</abbr></th>
       <th class="col-deposito"><abbr title="A2 — Depósitos ao nível do solo (tambor, tonel, barril)">A2</abbr></th>
@@ -440,8 +448,6 @@ def main():
       <th>Depósitos Ae. aegypti</th>
       <th>Imóveis c/ Ae. aegypti</th>
       <th>Imóveis c/ Ae. albopictus</th>
-      <th>IIP</th>
-      <th>Classificação</th>
     </tr>
   </thead>
   <tbody id="corpoConsolidado"></tbody>
@@ -513,6 +519,17 @@ def main():
     if (valor < 1) return ["Baixo risco", CORES.verde];
     if (valor < 3.9) return ["Risco médio", "#e08e00"];
     return ["Alto risco", "#c62828"];
+  }}
+
+  function classificarIB(valor) {{
+    if (valor < 5) return ["Baixo risco", CORES.verde];
+    if (valor < 10) return ["Risco médio", "#e08e00"];
+    return ["Alto risco", "#c62828"];
+  }}
+
+  function calcularIB(depositosAegypti, imoveisVistoriados) {{
+    if (!imoveisVistoriados) return 0;
+    return Math.round((depositosAegypti / imoveisVistoriados) * 100 * 100) / 100;
   }}
 
   function formatarData(iso) {{
@@ -604,6 +621,8 @@ def main():
     const snap = SNAPSHOTS[indice];
     const tg = snap.total_geral;
     const [labelGeral, corGeral] = classificarIIP(tg.IIP || 0);
+    const ibGeral = calcularIB(tg.Total_Aegypti || 0, tg.Total_Imoveis || 0);
+    const [labelIbGeral, corIbGeral] = classificarIB(ibGeral);
 
     document.getElementById("subtitulo").textContent =
       `${{rotuloCiclo(snap)}} · Coletado em ${{formatarData(snap.gerado_em)}}`;
@@ -614,6 +633,13 @@ def main():
     const badge = document.getElementById("badgeGeral");
     badge.textContent = labelGeral;
     badge.style.background = corGeral;
+
+    document.getElementById("ibGrande").textContent = ibGeral;
+    document.getElementById("ibGrande").style.color = corIbGeral;
+
+    const badgeIb = document.getElementById("badgeIbGeral");
+    badgeIb.textContent = labelIbGeral;
+    badgeIb.style.background = corIbGeral;
 
     document.getElementById("tImoveis").textContent = tg.Total_Imoveis || 0;
     document.getElementById("tAegypti").textContent = tg.Total_Imoveis_Aegypti || 0;
@@ -629,13 +655,24 @@ def main():
       const bloco = snap.estratos[nome];
       const t = bloco.total;
       const [label, cor] = classificarIIP(t.IIP || 0);
+      const ibEstrato = calcularIB(t.Total_Aegypti || 0, t.Total_Imoveis || 0);
+      const [, corIb] = classificarIB(ibEstrato);
       valoresIIPEstratos.push(t.IIP || 0);
 
       const card = document.createElement("div");
       card.className = "card";
       card.innerHTML = `
         <h3>${{nome}}</h3>
-        <div class="iip" style="color:${{cor}}">${{t.IIP || 0}}%</div>
+        <div style="display:flex; align-items:baseline; gap:16px;">
+          <div>
+            <div class="iip" style="color:${{cor}}">${{t.IIP || 0}}%</div>
+            <div style="font-size:11px; color:var(--muted); font-weight:600;">IIP</div>
+          </div>
+          <div>
+            <div class="iip" style="color:${{corIb}}; font-size:22px;">${{ibEstrato}}</div>
+            <div style="font-size:11px; color:var(--muted); font-weight:600;">IB</div>
+          </div>
+        </div>
         <div class="badge" style="background:${{cor}}">${{label}}</div>
         <table class="mini">
           <tr><td>Imóveis vistoriados</td><td>${{t.Total_Imoveis || 0}}</td></tr>
@@ -662,37 +699,41 @@ def main():
       }}).join("");
     }}
 
+    function calcularResto(obj) {{
+      return (obj.Resid_Aegypti || 0) + (obj.Comercio_Aegypti || 0) + (obj.Outros_Aegypti || 0);
+    }}
+
     nomesEstratos.forEach(nome => {{
       const t = snap.estratos[nome].total;
-      const [label, cor] = classificarIIP(t.IIP || 0);
+      const tbFoco = t.TB_Aegypti || 0;
+      const restoFoco = calcularResto(t);
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${{nome}}</td>
         <td>${{t.Total_Imoveis || 0}}</td>
+        <td class="col-tubitos ${{tbFoco > 0 ? 'tem-foco' : 'sem-foco'}}">${{tbFoco}}</td>
+        <td class="col-tubitos ${{restoFoco > 0 ? 'tem-foco' : 'sem-foco'}}">${{restoFoco}}</td>
         <td class="col-tubitos ${{(t.Tubitos || 0) > 0 ? 'tem-foco' : 'sem-foco'}}">${{t.Tubitos || 0}}</td>
         ${{celulasDepositoDe(t)}}
         <td>${{t.Total_Aegypti || 0}}</td>
         <td>${{t.Total_Imoveis_Aegypti || 0}}</td>
         <td>${{t.Total_Imoveis_Albopictus || 0}}</td>
-        <td style="font-weight:700;color:${{cor}}">${{t.IIP || 0}}%</td>
-        <td class="badge-cell"><span class="badge-tabela" style="background:${{cor}}">${{label}}</span></td>
       `;
       corpoConsolidado.appendChild(tr);
     }});
 
-    const [labelTg, corTg] = classificarIIP(tg.IIP || 0);
     const trTotal = document.createElement("tr");
     trTotal.className = "linha-total";
     trTotal.innerHTML = `
       <td>TOTAL GERAL</td>
       <td>${{tg.Total_Imoveis || 0}}</td>
+      <td>${{tg.TB_Aegypti || 0}}</td>
+      <td>${{calcularResto(tg)}}</td>
       <td class="col-tubitos">${{tg.Tubitos || 0}}</td>
       ${{celulasDepositoDe(tg)}}
       <td>${{tg.Total_Aegypti || 0}}</td>
       <td>${{tg.Total_Imoveis_Aegypti || 0}}</td>
       <td>${{tg.Total_Imoveis_Albopictus || 0}}</td>
-      <td style="color:${{corTg}}">${{tg.IIP || 0}}%</td>
-      <td class="badge-cell"><span class="badge-tabela" style="background:${{corTg}}">${{labelTg}}</span></td>
     `;
     corpoConsolidado.appendChild(trTotal);
 
