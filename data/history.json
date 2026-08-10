@@ -1519,7 +1519,7 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-10T12:43:50.306674-04:00",
+    "gerado_em": "2026-08-10T13:53:57.508278-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
@@ -2396,14 +2396,14 @@
             "B": 0,
             "C": 0,
             "D1": 0,
-            "D2": 0,
+            "D2": 1,
             "E": 0,
-            "Total_Aegypti": 0,
+            "Total_Aegypti": 1,
             "Resid_Aegypti": 0,
             "Comercio_Aegypti": 0,
-            "TB_Aegypti": 0,
+            "TB_Aegypti": 1,
             "Outros_Aegypti": 0,
-            "Total_Imoveis_Aegypti": 0,
+            "Total_Imoveis_Aegypti": 1,
             "Resid_Albopictus": 0,
             "Comercio_Albopictus": 0,
             "TB_Albopictus": 0,
@@ -2621,20 +2621,20 @@
           "B": 3,
           "C": 1,
           "D1": 0,
-          "D2": 4,
+          "D2": 5,
           "E": 0,
-          "Total_Aegypti": 10,
+          "Total_Aegypti": 11,
           "Resid_Aegypti": 7,
           "Comercio_Aegypti": 0,
-          "TB_Aegypti": 3,
+          "TB_Aegypti": 4,
           "Outros_Aegypti": 0,
-          "Total_Imoveis_Aegypti": 10,
+          "Total_Imoveis_Aegypti": 11,
           "Resid_Albopictus": 1,
           "Comercio_Albopictus": 0,
           "TB_Albopictus": 2,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 3,
-          "IIP": 2.2
+          "IIP": 2.42
         }
       },
       "Estrato 4": {
@@ -3021,20 +3021,20 @@
       "B": 10,
       "C": 1,
       "D1": 1,
-      "D2": 7,
+      "D2": 8,
       "E": 0,
-      "Total_Aegypti": 23,
+      "Total_Aegypti": 24,
       "Resid_Aegypti": 16,
       "Comercio_Aegypti": 0,
-      "TB_Aegypti": 7,
+      "TB_Aegypti": 8,
       "Outros_Aegypti": 0,
-      "Total_Imoveis_Aegypti": 23,
+      "Total_Imoveis_Aegypti": 24,
       "Resid_Albopictus": 1,
       "Comercio_Albopictus": 0,
       "TB_Albopictus": 2,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 3,
-      "IIP": 1.33
+      "IIP": 1.39
     }
   }
 }
