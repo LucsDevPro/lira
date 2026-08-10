@@ -1519,15 +1519,15 @@
     }
   },
   "318-319": {
-    "gerado_em": "2026-08-08T22:38:05.518852-04:00",
+    "gerado_em": "2026-08-10T06:25:21.484954-04:00",
     "semana_inicio": "318",
     "semana_fim": "319",
     "semana_exibicao": {
       "ano_inicio": 2026,
-      "semana_inicio": 31,
+      "semana_inicio": 32,
       "ano_fim": 2026,
-      "semana_fim": 32,
-      "rotulo": "SE 31-32/2026"
+      "semana_fim": 33,
+      "rotulo": "SE 32-33/2026"
     },
     "estratos": {
       "Estrato 1": {
