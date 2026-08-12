@@ -3,9 +3,7 @@ name: Atualizar LIRAa
 on:
   schedule:
     # Horários em UTC. MS = UTC-4 (sem horário de verão).
-    - cron: '0 9 * * 1-5'    # 05:00 em MS, seg a sex
-    - cron: '0 16 * * 1-5'   # 12:00 (meio-dia) em MS, seg a sex
-    - cron: '0 23 * * 1-5'   # 19:00 em MS, seg a sex
+    
   workflow_dispatch: {}       # permite rodar manualmente pela aba Actions
 
 permissions:
