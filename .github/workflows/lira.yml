@@ -2,9 +2,13 @@ name: Atualizar LIRAa
 
 on:
   schedule:
-    # Horários em UTC. MS = UTC-4 (sem horário de verão).
-    
-  workflow_dispatch: {}       # permite rodar manualmente pela aba Actions
+    # Horários em UTC. Ponta Porã/MS = UTC−4 (sem horário de verão).
+    # 07:00 UTC = 03:00 (madrugada) e 16:00 UTC = 12:00 (almoço), horário local.
+    # Dias 3 a 15 de novembro. O cron não tem "ano": o scraper confere a
+    # janela real (03/11/2026 a 15/11/2026) com --respeitar-janela, então
+    # em novembro de 2027 em diante nada é coletado.
+    - cron: '0 7,16 3-15 11 *'
+  workflow_dispatch: {}       # execução manual pela aba Actions (ignora a janela)
 
 permissions:
   contents: write
@@ -16,7 +20,7 @@ concurrency:
 jobs:
   atualizar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout do repositório
@@ -37,9 +41,11 @@ jobs:
         env:
           LIRA_USUARIO: ${{ secrets.LIRA_USUARIO }}
           LIRA_SENHA: ${{ secrets.LIRA_SENHA }}
-        run: python lira_scraper.py
+          # Execução agendada respeita a janela 03/11–15/11/2026; manual não.
+          ARGS_JANELA: ${{ github.event_name == 'schedule' && '--respeitar-janela' || '' }}
+        run: python lira_scraper.py $ARGS_JANELA
 
-      - name: Gerar dashboard HTML
+      - name: Gerar dados do site
         run: python generate_dashboard.py
 
       - name: Publicar mudanças no repositório
@@ -47,5 +53,10 @@ jobs:
           git config user.name "lira-bot"
           git config user.email "lira-bot@users.noreply.github.com"
           git add data/ docs/
-          git diff --cached --quiet && echo "Nada novo para commitar" || git commit -m "Atualização automática LIRAa $(date -u +'%Y-%m-%d %H:%M UTC')"
-          git push
+          if git diff --cached --quiet; then
+            echo "Nada novo para commitar"
+          else
+            git commit -m "Atualização automática LIRAa $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
+            git push
+          fi
