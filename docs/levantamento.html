@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detalhes do levantamento — LIRAa Ponta Porã</title>
+<meta name="description" content="Detalhes de um levantamento LIRAa de Ponta Porã: classificação de risco, estratos, bairros e tipos de depósito.">
+<link rel="icon" href="assets/logo_pmpp.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/lira.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main class="container" id="conteudo">
+  <div class="page-head">
+    <div>
+      <h1>Detalhes do levantamento</h1>
+      <p>Resultado por estrato e por bairro, com a classificação de risco oficial.</p>
+    </div>
+    <div class="acoes">
+      <button class="btn" id="btnAnt" type="button" aria-label="Levantamento anterior">←</button>
+      <div class="campo" style="min-width:260px"><label class="sr-only" for="selLev">Levantamento</label><select id="selLev"></select></div>
+      <button class="btn" id="btnProx" type="button" aria-label="Próximo levantamento">→</button>
+      <button class="btn primario" id="btnExcel" type="button">Baixar Excel</button>
+      <button class="btn" id="btnImprimir" type="button">Imprimir</button>
+    </div>
+  </div>
+
+  <div id="semDados" hidden></div>
+
+  <div id="conteudoLev">
+    <section id="destaque"></section>
+
+    <section class="secao"><div class="secao-titulo"><h2>Classificação de risco</h2><p>Faixas oficiais do IIP e referência do IB.</p></div><div class="grid g-2" id="legendas"></div></section>
+
+    <section class="secao"><div class="secao-titulo"><h2>Resultado por estrato</h2></div><div class="grid g-4" id="cardsEstratos"></div></section>
+
+    <section class="secao">
+      <div class="secao-titulo"><h2>Consolidado por estrato</h2><p>Valores brutos do eVisita. TB = terreno baldio; Resto = residência + comércio + outros.</p></div>
+      <div class="card flush"><div class="tabela-scroll" style="max-height:none" id="tabConsolidado"></div></div>
+    </section>
+
+    <section class="secao">
+      <div class="grid g-2">
+        <div class="card"><h3 class="card-titulo">IIP por estrato</h3><p class="card-sub">Com as faixas oficiais do IIP ao fundo.</p><div class="chart-wrap baixo"><canvas id="gEstratos" role="img" aria-label="IIP por estrato"></canvas></div></div>
+        <div class="card"><h3 class="card-titulo">Depósitos positivos por tipo</h3><p class="card-sub">O tipo mais frequente aparece em destaque.</p><div id="listaCriadouros"></div></div>
+      </div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-titulo"><h2>Detalhamento por área (bairro)</h2><p id="contadorAreas"></p></div>
+      <div class="card flush"><div class="tabela-scroll" id="tabAreas"></div><p class="nota-tabela">Clique em um título de coluna para ordenar. A classificação usa a mesma faixa do IIP municipal.</p></div>
+    </section>
+
+    <div id="avisoAusentes" class="secao"></div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/data/lira-data.js"></script>
+<script src="assets/vendor/chart.umd.min.js"></script>
+<script src="assets/vendor/xlsx.full.min.js"></script>
+<script src="assets/js/lira-core.js"></script>
+<script src="assets/js/lira-widgets.js"></script>
+<script src="assets/js/levantamento.js"></script>
+</body>
+</html>

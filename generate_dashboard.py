@@ -1,24 +1,48 @@
 # -*- coding: utf-8 -*-
 """
-Gera docs/index.html a partir de data/history.json. Todos os snapshots
-ficam embutidos na página, com um seletor no topo para trocar entre
-períodos. O GitHub Pages publica o conteúdo da pasta docs/.
+Gera docs/assets/data/lira-data.js a partir de:
 
-Identidade visual: cores oficiais da Prefeitura Municipal de Ponta Porã
-(extraídas do logo em docs/assets/logo_pmpp.png) e fonte Poppins/Inter.
+  - data/history.json            (todos os levantamentos já coletados)
+  - config_levantamentos.json    (levantamentos previstos, home, janela)
+  - regras_classificacao.json    (regras ÚNICAS de classificação IIP/IB)
+  - data/estado_coleta.json      (estado das coletas, opcional)
+
+As páginas do site (docs/index.html, dashboard.html, levantamento.html) são
+estáticas e leem esse arquivo. Nenhum valor coletado é alterado aqui:
+só se acrescentam metadados (rótulo de semana, período, avisos de dados
+ausentes). Levantamentos configurados que ainda não têm dados entram na
+lista com status "sem_dados" — nunca com números inventados.
 """
 
 import json
 import os
+import re
+import sys
+from datetime import datetime, timezone, timedelta
 
-HISTORY_PATH = "data/history.json"
-OUTPUT_PATH = "docs/index.html"
+from semana_util import semana_exibicao_por_week_id, periodo_de_exibicao
 
-# Paleta oficial (extraída do logo da PMPP)
-COR_MARINHO = "#002B68"     # "PREFEITURA MUNICIPAL DE" / "PORÃ"
-COR_AZUL = "#007ECA"        # "PONTA"
-COR_VERDE = "#00B93B"       # ícone / risco baixo
-COR_AMARELO = "#FFB900"     # detalhe / risco médio
+DIR_BASE = os.path.dirname(os.path.abspath(__file__))
+HISTORY_PATH = os.environ.get("LIRA_HISTORY", os.path.join(DIR_BASE, "data", "history.json"))
+ESTADO_PATH = os.environ.get("LIRA_ESTADO", os.path.join(DIR_BASE, "data", "estado_coleta.json"))
+CONFIG_PATH = os.path.join(DIR_BASE, "config_levantamentos.json")
+REGRAS_PATH = os.path.join(DIR_BASE, "regras_classificacao.json")
+OUTPUT_PATH = os.environ.get("LIRA_OUTPUT", os.path.join(DIR_BASE, "docs", "assets", "data", "lira-data.js"))
+
+TZ_MS = timezone(timedelta(hours=-4))
+
+# Campos esperados no total geral; se faltar algum, vira aviso de "dado ausente".
+CAMPOS_ESPERADOS = [
+    "Total_Imoveis", "Total_Imoveis_Aegypti", "Total_Aegypti", "Tubitos",
+    "A1", "A2", "B", "C", "D1", "D2", "E", "Total_Imoveis_Albopictus",
+]
+
+
+def carregar(caminho, padrao):
+    if os.path.exists(caminho):
+        with open(caminho, encoding="utf-8") as f:
+            return json.load(f)
+    return padrao
 
 
 def calcular_iip(total_imoveis_aegypti, total_imoveis):
@@ -27,1015 +51,188 @@ def calcular_iip(total_imoveis_aegypti, total_imoveis):
     return round((total_imoveis_aegypti / total_imoveis) * 100, 2)
 
 
-def carregar_snapshots():
-    if not os.path.exists(HISTORY_PATH):
-        return []
+def completar_iip(snap):
+    """Só preenche o IIP quando o registro não traz (não sobrescreve nada)."""
+    for bloco in snap["estratos"].values():
+        t = bloco["total"]
+        if "IIP" not in t:
+            t["IIP"] = calcular_iip(t.get("Total_Imoveis_Aegypti", 0), t.get("Total_Imoveis", 0))
+    tg = snap["total_geral"]
+    if "IIP" not in tg:
+        tg["IIP"] = calcular_iip(tg.get("Total_Imoveis_Aegypti", 0), tg.get("Total_Imoveis", 0))
 
-    with open(HISTORY_PATH, encoding="utf-8") as f:
-        historico = json.load(f)
 
-    for snap in historico.values():
-        for bloco in snap["estratos"].values():
-            t = bloco["total"]
-            if "IIP" not in t:
-                t["IIP"] = calcular_iip(t.get("Total_Imoveis_Aegypti", 0), t.get("Total_Imoveis", 0))
-        tg = snap["total_geral"]
-        if "IIP" not in tg:
-            tg["IIP"] = calcular_iip(tg.get("Total_Imoveis_Aegypti", 0), tg.get("Total_Imoveis", 0))
+def codigo_area(nome):
+    m = re.match(r"\s*(\d+)\s*-", nome or "")
+    return m.group(1) if m else ""
 
-    return sorted(historico.values(), key=lambda s: s["gerado_em"])
+
+def reagrupar_estratos(estratos, sobrescritas):
+    """
+    Move áreas para o estrato correto (config "areas_estrato") e refaz os
+    totais dos estratos SOMANDO os valores originais das áreas. Nenhum valor
+    de área é alterado, e o total geral não muda.
+    """
+    sobrescritas = {k: v for k, v in (sobrescritas or {}).items() if not k.startswith("_")}
+    if not sobrescritas:
+        return estratos
+
+    nomes = sorted(estratos)
+    novos = {n: [] for n in nomes}
+    for nome, bloco in estratos.items():
+        for area in bloco["areas"]:
+            destino = sobrescritas.get(codigo_area(area.get("AREA")), nome)
+            novos[destino if destino in novos else nome].append(area)
+
+    saida = {}
+    for nome in nomes:
+        areas = novos[nome]
+        modelo = estratos[nome]["total"]
+        total = {"AREA": modelo.get("AREA", f"TOTAL {nome.upper()}")}
+        for campo, valor in modelo.items():
+            if campo in ("AREA", "IIP"):
+                continue
+            if isinstance(valor, (int, float)):
+                total[campo] = sum(a.get(campo, 0) or 0 for a in areas)
+        total["IIP"] = calcular_iip(total.get("Total_Imoveis_Aegypti", 0), total.get("Total_Imoveis", 0))
+        saida[nome] = {"areas": areas, "total": total}
+    return saida
+
+
+def enriquecer(chave, snap, lev):
+    """Acrescenta metadados ao registro (sem tocar nos valores coletados)."""
+    completar_iip(snap)
+    ausentes = []
+
+    exib = snap.get("semana_exibicao")
+    if exib and "rotulo" in exib:
+        periodo = snap.get("periodo") or periodo_de_exibicao(exib)
+        origem = snap.get("periodo_origem", "data da coleta")
+    else:
+        exib, periodo = semana_exibicao_por_week_id(snap["semana_inicio"], snap["semana_fim"])
+        origem = "id da semana (estimado)"
+
+    id_ciclo = snap.get("id_ciclo", lev.get("id_ciclo") if lev else None)
+    id_ano = snap.get("id_ano", lev.get("id_ano") if lev else None)
+    if id_ciclo is None:
+        ausentes.append("id do ciclo (eVisita) não registrado")
+    for campo in CAMPOS_ESPERADOS:
+        if campo not in snap["total_geral"]:
+            ausentes.append(f"campo {campo} ausente")
+    if lev and lev.get("observacao"):
+        ausentes.append(lev["observacao"])
+
+    nome = (lev or {}).get("nome")
+    return {
+        "chave": chave,
+        "nome": nome,
+        "mes": (lev or {}).get("mes") or periodo["inicio"][:7],
+        "status": "com_dados",
+        "semana_inicio": str(snap["semana_inicio"]),
+        "semana_fim": str(snap["semana_fim"]),
+        "id_ciclo": id_ciclo,
+        "id_ano": id_ano,
+        "coleta": (lev or {}).get("coleta", "somente_historico"),
+        "coletado_em": snap.get("gerado_em"),
+        "semana_exibicao": exib,
+        "periodo": periodo,
+        "periodo_origem": origem,
+        "ausentes": ausentes,
+        "estratos": reagrupar_estratos(snap["estratos"], SOBRESCRITAS_ESTRATO),
+        "total_geral": snap["total_geral"],
+    }
+
+
+def pendente(lev, estado):
+    exib, periodo = semana_exibicao_por_week_id(
+        lev["semana_inicio"], lev["semana_fim"], lev.get("se_inicio"))
+    ex = estado.get("execucoes", {}).get(lev["chave"], {})
+    if lev["coleta"] == "recuperacao_unica":
+        motivo = "Recuperação única agendada para a próxima atualização automática."
+    elif lev["coleta"] == "automatica":
+        motivo = "Aguardando os lançamentos no eVisita; coleta automática em andamento."
+    else:
+        motivo = "Sem dados no histórico."
+    return {
+        "chave": lev["chave"],
+        "nome": lev.get("nome"),
+        "mes": lev.get("mes") or periodo["inicio"][:7],
+        "status": "sem_dados",
+        "semana_inicio": str(lev["semana_inicio"]),
+        "semana_fim": str(lev["semana_fim"]),
+        "id_ciclo": lev.get("id_ciclo"),
+        "id_ano": lev.get("id_ano"),
+        "coleta": lev["coleta"],
+        "coletado_em": None,
+        "semana_exibicao": exib,
+        "periodo": periodo,
+        "periodo_origem": "id da semana (estimado)",
+        "ausentes": [motivo],
+        "ultima_tentativa": ex or None,
+        "estratos": None,
+        "total_geral": None,
+    }
+
+
+SOBRESCRITAS_ESTRATO = {}
+
+
+def montar_dados():
+    global SOBRESCRITAS_ESTRATO
+    config = carregar(CONFIG_PATH, {"levantamentos": []})
+    SOBRESCRITAS_ESTRATO = config.get("areas_estrato", {})
+    historico = carregar(HISTORY_PATH, {})
+    estado = carregar(ESTADO_PATH, {})
+    regras = carregar(REGRAS_PATH, {})
+
+    por_chave_cfg = {l["chave"]: l for l in config.get("levantamentos", [])}
+    lista = []
+
+    for chave, snap in historico.items():
+        lista.append(enriquecer(chave, snap, por_chave_cfg.get(chave)))
+
+    for chave, lev in por_chave_cfg.items():
+        if chave not in historico:
+            lista.append(pendente(lev, estado))
+
+    lista.sort(key=lambda l: int(l["semana_inicio"]))
+
+    for l in lista:
+        if not l["nome"]:
+            ano, mes = l["mes"].split("-")
+            meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho",
+                     "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+            l["nome"] = f"{meses[int(mes) - 1]}/{ano}"
+
+    return {
+        "gerado_em": datetime.now(TZ_MS).isoformat(),
+        "municipio": config.get("municipio", {}),
+        "fuso_horario": config.get("fuso_horario", {}),
+        "automacao": config.get("automacao", {}),
+        "home": config.get("home"),
+        "regras": regras,
+        "levantamentos": lista,
+    }
 
 
 def main():
-    lista = carregar_snapshots()
-
-    if not lista:
+    dados = montar_dados()
+    if not any(l["status"] == "com_dados" for l in dados["levantamentos"]):
         raise SystemExit(
             f"Não encontrei nenhum dado em {HISTORY_PATH}. "
             "Rode lira_scraper.py ou importar_xlsx_historico.py primeiro."
         )
 
-    snapshots_json = json.dumps(lista, ensure_ascii=False)
-
-    html = f"""<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LIRAa — Prefeitura Municipal de Ponta Porã</title>
-<link rel="icon" href="assets/logo_pmpp.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-  :root {{
-    --marinho: {COR_MARINHO};
-    --azul: {COR_AZUL};
-    --verde: {COR_VERDE};
-    --amarelo: {COR_AMARELO};
-    --bg: #f4f6fa;
-    --panel: #ffffff;
-    --text: #1c2733;
-    --muted: #67758a;
-    --border: #e3e8ef;
-    --shadow: 0 1px 3px rgba(16,34,64,0.06), 0 1px 2px rgba(16,34,64,0.08);
-  }}
-  * {{ box-sizing: border-box; }}
-  body {{
-    margin: 0;
-    font-family: 'Inter', -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 0 0 60px;
-  }}
-  h1, h2, h3, .brand-title {{ font-family: 'Poppins', 'Inter', sans-serif; }}
-
-  .topbar {{
-    background: linear-gradient(90deg, var(--marinho) 0%, #013a86 100%);
-    padding: 4px 0;
-  }}
-  .topbar .faixa {{
-    display: flex;
-    height: 6px;
-  }}
-  .topbar .faixa span {{ flex: 1; }}
-  .topbar .faixa span:nth-child(1) {{ background: var(--verde); }}
-  .topbar .faixa span:nth-child(2) {{ background: var(--amarelo); }}
-  .topbar .faixa span:nth-child(3) {{ background: var(--azul); }}
-
-  header.institucional {{
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    padding: 18px 32px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }}
-  .marca {{
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }}
-  .marca img {{ height: 52px; }}
-  .marca .titulos h1 {{
-    margin: 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--marinho);
-  }}
-  .marca .titulos .subtitulo-app {{
-    margin: 2px 0 0;
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 500;
-  }}
-
-  select#seletorSemana {{
-    background: var(--panel);
-    color: var(--text);
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 11px 16px;
-    font-size: 14px;
-    font-family: inherit;
-    min-width: 260px;
-    cursor: pointer;
-  }}
-  select#seletorSemana:focus {{ outline: 2px solid var(--azul); }}
-
-  .acoes-topo {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
-  .botao {{
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1.5px solid var(--border);
-    background: var(--panel);
-    color: var(--marinho);
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }}
-  .botao:hover {{ background: #eef4fb; border-color: var(--azul); }}
-  .botao.primario {{ background: var(--azul); color: #ffffff; border-color: var(--azul); }}
-  .botao.primario:hover {{ background: var(--marinho); border-color: var(--marinho); }}
-  .botao.excel {{ background: var(--verde); color: #ffffff; border-color: var(--verde); }}
-  .botao.excel:hover {{ background: #009630; border-color: #009630; }}
-  .botao-mini {{
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    border: 1.5px solid var(--border);
-    background: var(--panel);
-    color: var(--muted);
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-  }}
-  .botao-mini:hover {{ background: #eef4fb; border-color: var(--azul); color: var(--azul); }}
-
-  @media print {{
-    .no-print {{ display: none !important; }}
-    body {{ background: #fff; padding: 0; }}
-    .topbar {{ display: none; }}
-    header.institucional {{ box-shadow: none; border-bottom: 2px solid var(--marinho); }}
-    .tabela-scroll {{ overflow: visible !important; box-shadow: none; }}
-    .card, .chart-box, .resumo {{ box-shadow: none; border: 1px solid #ccc; }}
-    @page {{ size: landscape; margin: 12mm; }}
-  }}
-
-  main {{ padding: 28px 32px 0; max-width: 1280px; margin: 0 auto; }}
-
-  .subtitulo {{ color: var(--muted); font-size: 14px; }}
-
-  .resumo {{
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px 26px;
-    margin-bottom: 24px;
-    box-shadow: var(--shadow);
-    border-left: 5px solid var(--azul);
-  }}
-  .resumo .iip-grande {{ font-size: 44px; font-weight: 700; font-family: 'Poppins', sans-serif; }}
-  .tubitos-destaque {{
-    text-align: center;
-    background: #fff4e5;
-    border: 1.5px solid var(--amarelo);
-    border-radius: 12px;
-    padding: 14px 26px;
-    min-width: 150px;
-  }}
-  .tubitos-destaque .numero {{
-    font-size: 40px;
-    font-weight: 700;
-    font-family: 'Poppins', sans-serif;
-    color: #a15c00;
-    line-height: 1;
-  }}
-  .tubitos-destaque .rotulo {{
-    font-size: 12px;
-    color: #a15c00;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    margin-top: 6px;
-  }}
-  .badge {{
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #ffffff;
-    margin-top: 6px;
-    letter-spacing: 0.2px;
-  }}
-  .grid {{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 16px;
-    margin-bottom: 28px;
-  }}
-  .card {{
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    box-shadow: var(--shadow);
-    border-top: 4px solid var(--marinho);
-  }}
-  .card h3 {{ margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }}
-  .card .iip {{ font-size: 28px; font-weight: 700; font-family: 'Poppins', sans-serif; }}
-  table.mini {{ width: 100%; margin-top: 14px; border-collapse: collapse; font-size: 13px; }}
-  table.mini td {{ padding: 5px 0; color: var(--muted); }}
-  table.mini td:last-child {{ text-align: right; color: var(--text); font-weight: 600; }}
-  .charts {{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 28px;
-  }}
-  .chart-box {{
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px 22px 14px;
-    box-shadow: var(--shadow);
-  }}
-  .chart-box .chart-titulo {{
-    font-family: 'Poppins', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--marinho);
-    margin: 0 0 14px;
-  }}
-  .chart-canvas-wrap {{
-    position: relative;
-    height: 340px;
-  }}
-  @media (max-width: 800px) {{
-    .charts {{ grid-template-columns: 1fr; }}
-    .chart-canvas-wrap {{ height: 300px; }}
-  }}
-  .tabela-scroll {{
-    width: 100%;
-    overflow-x: auto;
-    border-radius: 14px;
-    box-shadow: var(--shadow);
-    margin-bottom: 28px;
-    -webkit-overflow-scrolling: touch;
-  }}
-  table.dados {{
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    font-size: 13px;
-    table-layout: auto;
-  }}
-  table.dados th {{
-    text-align: left;
-    background: var(--marinho);
-    padding: 12px 14px;
-    color: #ffffff;
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-    cursor: pointer;
-    user-select: none;
-    white-space: nowrap;
-  }}
-  table.dados th abbr {{ text-decoration: none; border-bottom: 1px dotted rgba(255,255,255,0.6); cursor: help; }}
-  table.dados td, table.dados th {{ white-space: nowrap; }}
-  th.col-deposito, td.col-deposito {{ background: #eef6ff; text-align: center; }}
-  td.col-deposito {{ font-weight: 700; font-family: 'Poppins', sans-serif; }}
-  td.col-deposito.tem-foco {{ color: var(--azul); }}
-  td.col-deposito.sem-foco {{ color: #9aa5b1; font-weight: 500; }}
-  table.dados th:hover {{ background: #013a86; }}
-  table.dados th .seta {{ font-size: 10px; opacity: 0.7; margin-left: 4px; }}
-  table.dados td {{ padding: 9px 14px; border-top: 1px solid var(--border); }}
-  table.dados tr:hover {{ background: #eef4fb; }}
-  th.col-tubitos, td.col-tubitos {{ background: #fff9ef; }}
-  td.col-tubitos {{ font-weight: 700; font-family: 'Poppins', sans-serif; }}
-  td.col-tubitos.tem-foco {{ color: #a15c00; }}
-  .tabela-controles {{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 12px;
-  }}
-  .tabela-controles h2 {{
-    font-size: 15px;
-    color: var(--marinho);
-    margin: 0;
-  }}
-  #contadorAreas {{ font-size: 12px; color: var(--muted); font-weight: 500; }}
-  .dica-ordenar {{ font-size: 12px; color: var(--muted); font-weight: 500; }}
-  table.dados tr.linha-total td {{
-    background: #eef2f8;
-    font-weight: 700;
-    border-top: 2px solid var(--marinho);
-  }}
-  table.dados td.badge-cell {{ text-align: left; }}
-  table.dados .badge-tabela {{
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #ffffff;
-  }}
-  td.col-tubitos.sem-foco {{ color: #9aa5b1; font-weight: 500; }}
-  footer {{
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: 32px;
-    text-align: center;
-    padding: 20px 32px 0;
-  }}
-  footer strong {{ color: var(--marinho); }}
-</style>
-</head>
-<body>
-
-<div class="topbar">
-  <div class="faixa"><span></span><span></span><span></span></div>
-</div>
-
-<header class="institucional">
-  <div class="marca">
-    <img src="assets/logo_pmpp.png" alt="Prefeitura Municipal de Ponta Porã">
-    <div class="titulos">
-      <h1>Setor de Endemias e Vetores — LIRAa</h1>
-      <p class="subtitulo-app" id="subtitulo"></p>
-    </div>
-  </div>
-  <div class="acoes-topo no-print">
-    <select id="seletorSemana"></select>
-    <button class="botao excel" id="btnExcel" title="Baixa os dados do período selecionado em Excel">⬇ Baixar Excel</button>
-    <button class="botao primario" id="btnImprimirTudo" title="Imprime o relatório completo">🖶 Imprimir relatório</button>
-  </div>
-</header>
-
-<main>
-
-<div class="resumo">
-  <div>
-    <div class="subtitulo">IIP Geral (Índice de Infestação Predial)</div>
-    <div class="iip-grande" id="iipGrande"></div>
-    <div class="badge" id="badgeGeral"></div>
-  </div>
-  <div style="border-left:1px solid var(--border); padding-left:20px;">
-    <div class="subtitulo">IB Geral (Índice de Breteau)</div>
-    <div class="iip-grande" id="ibGrande"></div>
-    <div class="badge" id="badgeIbGeral"></div>
-  </div>
-  <div class="tubitos-destaque">
-    <div class="numero" id="tubitosGrande"></div>
-    <div class="rotulo">Tubitos recolhidos<br>(focos encontrados)</div>
-  </div>
-  <div style="flex:1"></div>
-  <table class="mini" style="max-width:280px">
-    <tr><td>Imóveis vistoriados</td><td id="tImoveis"></td></tr>
-    <tr><td>Imóveis c/ Ae. aegypti</td><td id="tAegypti"></td></tr>
-    <tr><td>Imóveis c/ Ae. albopictus</td><td id="tAlbopictus"></td></tr>
-  </table>
-</div>
-
-<div class="grid" id="cardsEstratos"></div>
-
-<div class="tabela-controles">
-  <h2>Consolidado por estrato</h2>
-  <button class="botao-mini no-print" id="btnImprimirConsolidado">🖶 Imprimir esta tabela</button>
-</div>
-
-<div class="tabela-scroll" id="secaoConsolidado">
-<table class="dados">
-  <thead>
-    <tr>
-      <th>Estrato</th>
-      <th>Imóveis vistoriados</th>
-      <th><abbr title="Imóveis do tipo Terreno Baldio com foco encontrado">TB (com foco)</abbr></th>
-      <th><abbr title="Imóveis com foco encontrado: Residência + Comércio + Outros">Resto (com foco)</abbr></th>
-      <th class="col-tubitos">Tubitos (focos)</th>
-      <th class="col-deposito"><abbr title="A1 — Depósitos elevados (caixa d'água, cisterna)">A1</abbr></th>
-      <th class="col-deposito"><abbr title="A2 — Depósitos ao nível do solo (tambor, tonel, barril)">A2</abbr></th>
-      <th class="col-deposito"><abbr title="B — Depósitos móveis (vasos, garrafas, bebedouros)">B</abbr></th>
-      <th class="col-deposito"><abbr title="C — Depósitos fixos (ralos, calhas, lajes)">C</abbr></th>
-      <th class="col-deposito"><abbr title="D1 — Pneus e sucatas">D1</abbr></th>
-      <th class="col-deposito"><abbr title="D2 — Lixo (recipientes descartáveis)">D2</abbr></th>
-      <th class="col-deposito"><abbr title="E — Depósitos naturais (ocos de árvore, bromélias, rochas)">E</abbr></th>
-      <th>Depósitos Ae. aegypti</th>
-      <th>Imóveis c/ Ae. aegypti</th>
-      <th>Imóveis c/ Ae. albopictus</th>
-    </tr>
-  </thead>
-  <tbody id="corpoConsolidado"></tbody>
-</table>
-</div>
-
-<div class="charts">
-  <div class="chart-box">
-    <p class="chart-titulo">IIP por Estrato</p>
-    <div class="chart-canvas-wrap"><canvas id="chartEstratos"></canvas></div>
-  </div>
-  <div class="chart-box">
-    <p class="chart-titulo">Histórico do IIP Geral</p>
-    <div class="chart-canvas-wrap"><canvas id="chartHistorico"></canvas></div>
-  </div>
-</div>
-
-<div class="charts">
-  <div class="chart-box" style="grid-column: 1 / -1;">
-    <p class="chart-titulo">Depósitos com foco por tipo (qual predomina)</p>
-    <div class="chart-canvas-wrap"><canvas id="chartDepositos"></canvas></div>
-  </div>
-</div>
-
-<div class="tabela-controles">
-  <h2>Detalhamento por área</h2>
-  <div style="display:flex; align-items:center; gap:14px;">
-    <span id="contadorAreas"></span>
-    <span class="dica-ordenar">Clique numa coluna para ordenar (numérico ou alfabético)</span>
-    <button class="botao-mini no-print" id="btnImprimirDetalhe">🖶 Imprimir esta tabela</button>
-  </div>
-</div>
-
-<div class="tabela-scroll" id="secaoDetalhe">
-<table class="dados">
-  <thead>
-    <tr>
-      <th data-campo="estrato">Estrato</th>
-      <th data-campo="area">Área</th>
-      <th data-campo="Total_Imoveis">Imóveis vistoriados</th>
-      <th class="col-tubitos" data-campo="Tubitos">Tubitos (focos)</th>
-      <th class="col-deposito" data-campo="A1"><abbr title="A1 — Depósitos elevados (caixa d'água, cisterna)">A1</abbr></th>
-      <th class="col-deposito" data-campo="A2"><abbr title="A2 — Depósitos ao nível do solo (tambor, tonel, barril)">A2</abbr></th>
-      <th class="col-deposito" data-campo="B"><abbr title="B — Depósitos móveis (vasos, garrafas, bebedouros)">B</abbr></th>
-      <th class="col-deposito" data-campo="C"><abbr title="C — Depósitos fixos (ralos, calhas, lajes)">C</abbr></th>
-      <th class="col-deposito" data-campo="D1"><abbr title="D1 — Pneus e sucatas">D1</abbr></th>
-      <th class="col-deposito" data-campo="D2"><abbr title="D2 — Lixo (recipientes descartáveis)">D2</abbr></th>
-      <th class="col-deposito" data-campo="E"><abbr title="E — Depósitos naturais (ocos de árvore, bromélias, rochas)">E</abbr></th>
-      <th data-campo="Total_Aegypti">Depósitos Ae. aegypti</th>
-      <th data-campo="Total_Imoveis_Aegypti">Imóveis c/ Ae. aegypti</th>
-      <th data-campo="Total_Imoveis_Albopictus">Imóveis c/ Ae. albopictus</th>
-    </tr>
-  </thead>
-  <tbody id="corpoTabela"></tbody>
-</table>
-</div>
-
-<footer>Gerado automaticamente a partir do eVisita/PNCD — <strong>Prefeitura Municipal de Ponta Porã</strong>, Secretaria Municipal de Saúde.</footer>
-
-</main>
-
-<script>
-  const SNAPSHOTS = {snapshots_json}; // ordenado do mais antigo pro mais novo
-  const corTexto = "#67758a";
-  const corGrade = "#e3e8ef";
-  const CORES = {{ marinho: "{COR_MARINHO}", azul: "{COR_AZUL}", verde: "{COR_VERDE}", amarelo: "{COR_AMARELO}" }};
-
-  function classificarIIP(valor) {{
-    if (valor < 1) return ["Baixo risco", CORES.verde];
-    if (valor < 3.9) return ["Risco médio", "#e08e00"];
-    return ["Alto risco", "#c62828"];
-  }}
-
-  function classificarIB(valor) {{
-    if (valor < 5) return ["Baixo risco", CORES.verde];
-    if (valor < 10) return ["Risco médio", "#e08e00"];
-    return ["Alto risco", "#c62828"];
-  }}
-
-  function calcularIB(depositosAegypti, imoveisVistoriados) {{
-    if (!imoveisVistoriados) return 0;
-    return Math.round((depositosAegypti / imoveisVistoriados) * 100 * 100) / 100;
-  }}
-
-  function formatarData(iso) {{
-    return iso.slice(0, 16).replace("T", " ");
-  }}
-
-  function rotuloCiclo(snap) {{
-    if (snap.semana_exibicao && snap.semana_exibicao.rotulo) {{
-      return snap.semana_exibicao.rotulo;
-    }}
-    return `Semana ${{snap.semana_inicio}}-${{snap.semana_fim}}`;
-  }}
-
-  let chartEstratos = null;
-  let chartHistorico = null;
-  let chartDepositos = null;
-  let linhasAtuais = [];
-  let ordenarCampo = null;
-  let ordenarAsc = true;
-
-  function renderizarTabela() {{
-    let linhas = linhasAtuais.slice();
-
-    if (ordenarCampo) {{
-      linhas.sort((a, b) => {{
-        const va = a[ordenarCampo], vb = b[ordenarCampo];
-        let cmp;
-        if (typeof va === "number" && typeof vb === "number") {{
-          cmp = va - vb;
-        }} else {{
-          cmp = String(va).localeCompare(String(vb), 'pt-BR');
-        }}
-        return ordenarAsc ? cmp : -cmp;
-      }});
-    }}
-
-    const corpo = document.getElementById("corpoTabela");
-    corpo.innerHTML = "";
-    const codigosDeposito = ["A1", "A2", "B", "C", "D1", "D2", "E"];
-    linhas.forEach(l => {{
-      const tr = document.createElement("tr");
-      const classeTubitos = l.Tubitos > 0 ? "tem-foco" : "sem-foco";
-      const celulasDeposito = codigosDeposito.map(cod => {{
-        const v = l[cod] || 0;
-        const classe = v > 0 ? "tem-foco" : "sem-foco";
-        return `<td class="col-deposito ${{classe}}">${{v}}</td>`;
-      }}).join("");
-      tr.innerHTML = `
-        <td>${{l.estrato}}</td>
-        <td>${{l.area}}</td>
-        <td>${{l.Total_Imoveis}}</td>
-        <td class="col-tubitos ${{classeTubitos}}">${{l.Tubitos}}</td>
-        ${{celulasDeposito}}
-        <td>${{l.Total_Aegypti}}</td>
-        <td>${{l.Total_Imoveis_Aegypti}}</td>
-        <td>${{l.Total_Imoveis_Albopictus}}</td>
-      `;
-      corpo.appendChild(tr);
-    }});
-
-    document.getElementById("contadorAreas").textContent =
-      `${{linhas.length}} área(s)`;
-
-    document.querySelectorAll("table.dados th[data-campo]").forEach(th => {{
-      th.querySelector(".seta")?.remove();
-      if (th.dataset.campo === ordenarCampo) {{
-        const seta = document.createElement("span");
-        seta.className = "seta";
-        seta.textContent = ordenarAsc ? "▲" : "▼";
-        th.appendChild(seta);
-      }}
-    }});
-  }}
-
-  document.querySelectorAll("table.dados th[data-campo]").forEach(th => {{
-    th.addEventListener("click", () => {{
-      const campo = th.dataset.campo;
-      if (ordenarCampo === campo) {{
-        ordenarAsc = !ordenarAsc;
-      }} else {{
-        ordenarCampo = campo;
-        ordenarAsc = true;
-      }}
-      renderizarTabela();
-    }});
-  }});
-
-  function renderizar(indice) {{
-    const snap = SNAPSHOTS[indice];
-    const tg = snap.total_geral;
-    const [labelGeral, corGeral] = classificarIIP(tg.IIP || 0);
-    const ibGeral = calcularIB(tg.Total_Aegypti || 0, tg.Total_Imoveis || 0);
-    const [labelIbGeral, corIbGeral] = classificarIB(ibGeral);
-
-    document.getElementById("subtitulo").textContent =
-      `${{rotuloCiclo(snap)}} · Coletado em ${{formatarData(snap.gerado_em)}}`;
-
-    document.getElementById("iipGrande").textContent = (tg.IIP || 0) + "%";
-    document.getElementById("iipGrande").style.color = corGeral;
-
-    const badge = document.getElementById("badgeGeral");
-    badge.textContent = labelGeral;
-    badge.style.background = corGeral;
-
-    document.getElementById("ibGrande").textContent = ibGeral;
-    document.getElementById("ibGrande").style.color = corIbGeral;
-
-    const badgeIb = document.getElementById("badgeIbGeral");
-    badgeIb.textContent = labelIbGeral;
-    badgeIb.style.background = corIbGeral;
-
-    document.getElementById("tImoveis").textContent = tg.Total_Imoveis || 0;
-    document.getElementById("tAegypti").textContent = tg.Total_Imoveis_Aegypti || 0;
-    document.getElementById("tAlbopictus").textContent = tg.Total_Imoveis_Albopictus || 0;
-    document.getElementById("tubitosGrande").textContent = tg.Tubitos || 0;
-
-    const cardsDiv = document.getElementById("cardsEstratos");
-    cardsDiv.innerHTML = "";
-    const nomesEstratos = Object.keys(snap.estratos);
-    const valoresIIPEstratos = [];
-
-    nomesEstratos.forEach(nome => {{
-      const bloco = snap.estratos[nome];
-      const t = bloco.total;
-      const [label, cor] = classificarIIP(t.IIP || 0);
-      const ibEstrato = calcularIB(t.Total_Aegypti || 0, t.Total_Imoveis || 0);
-      const [, corIb] = classificarIB(ibEstrato);
-      valoresIIPEstratos.push(t.IIP || 0);
-
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <h3>${{nome}}</h3>
-        <div style="display:flex; align-items:baseline; gap:16px;">
-          <div>
-            <div class="iip" style="color:${{cor}}">${{t.IIP || 0}}%</div>
-            <div style="font-size:11px; color:var(--muted); font-weight:600;">IIP</div>
-          </div>
-          <div>
-            <div class="iip" style="color:${{corIb}}; font-size:22px;">${{ibEstrato}}</div>
-            <div style="font-size:11px; color:var(--muted); font-weight:600;">IB</div>
-          </div>
-        </div>
-        <div class="badge" style="background:${{cor}}">${{label}}</div>
-        <table class="mini">
-          <tr><td>Imóveis vistoriados</td><td>${{t.Total_Imoveis || 0}}</td></tr>
-          <tr style="background:#fff9ef">
-            <td style="color:#a15c00;font-weight:600">Tubitos (focos)</td>
-            <td style="color:#a15c00;font-weight:700">${{t.Tubitos || 0}}</td>
-          </tr>
-          <tr><td>Imóveis c/ Ae. aegypti</td><td>${{t.Total_Imoveis_Aegypti || 0}}</td></tr>
-          <tr><td>Depósitos c/ Ae. aegypti</td><td>${{t.Total_Aegypti || 0}}</td></tr>
-        </table>
-      `;
-      cardsDiv.appendChild(card);
-    }});
-
-    const corpoConsolidado = document.getElementById("corpoConsolidado");
-    corpoConsolidado.innerHTML = "";
-    const codigosDeposito = ["A1", "A2", "B", "C", "D1", "D2", "E"];
-
-    function celulasDepositoDe(obj) {{
-      return codigosDeposito.map(cod => {{
-        const v = obj[cod] || 0;
-        const classe = v > 0 ? "tem-foco" : "sem-foco";
-        return `<td class="col-deposito ${{classe}}">${{v}}</td>`;
-      }}).join("");
-    }}
-
-    function calcularResto(obj) {{
-      return (obj.Resid_Aegypti || 0) + (obj.Comercio_Aegypti || 0) + (obj.Outros_Aegypti || 0);
-    }}
-
-    nomesEstratos.forEach(nome => {{
-      const t = snap.estratos[nome].total;
-      const tbFoco = t.TB_Aegypti || 0;
-      const restoFoco = calcularResto(t);
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${{nome}}</td>
-        <td>${{t.Total_Imoveis || 0}}</td>
-        <td class="col-tubitos ${{tbFoco > 0 ? 'tem-foco' : 'sem-foco'}}">${{tbFoco}}</td>
-        <td class="col-tubitos ${{restoFoco > 0 ? 'tem-foco' : 'sem-foco'}}">${{restoFoco}}</td>
-        <td class="col-tubitos ${{(t.Tubitos || 0) > 0 ? 'tem-foco' : 'sem-foco'}}">${{t.Tubitos || 0}}</td>
-        ${{celulasDepositoDe(t)}}
-        <td>${{t.Total_Aegypti || 0}}</td>
-        <td>${{t.Total_Imoveis_Aegypti || 0}}</td>
-        <td>${{t.Total_Imoveis_Albopictus || 0}}</td>
-      `;
-      corpoConsolidado.appendChild(tr);
-    }});
-
-    const trTotal = document.createElement("tr");
-    trTotal.className = "linha-total";
-    trTotal.innerHTML = `
-      <td>TOTAL GERAL</td>
-      <td>${{tg.Total_Imoveis || 0}}</td>
-      <td>${{tg.TB_Aegypti || 0}}</td>
-      <td>${{calcularResto(tg)}}</td>
-      <td class="col-tubitos">${{tg.Tubitos || 0}}</td>
-      ${{celulasDepositoDe(tg)}}
-      <td>${{tg.Total_Aegypti || 0}}</td>
-      <td>${{tg.Total_Imoveis_Aegypti || 0}}</td>
-      <td>${{tg.Total_Imoveis_Albopictus || 0}}</td>
-    `;
-    corpoConsolidado.appendChild(trTotal);
-
-    linhasAtuais = [];
-    nomesEstratos.forEach(nome => {{
-      snap.estratos[nome].areas.forEach(area => {{
-        linhasAtuais.push({{
-          estrato: nome,
-          area: area.AREA || "",
-          Total_Imoveis: area.Total_Imoveis || 0,
-          Tubitos: area.Tubitos || 0,
-          A1: area.A1 || 0,
-          A2: area.A2 || 0,
-          B: area.B || 0,
-          C: area.C || 0,
-          D1: area.D1 || 0,
-          D2: area.D2 || 0,
-          E: area.E || 0,
-          Total_Aegypti: area.Total_Aegypti || 0,
-          Total_Imoveis_Aegypti: area.Total_Imoveis_Aegypti || 0,
-          Total_Imoveis_Albopictus: area.Total_Imoveis_Albopictus || 0,
-        }});
-      }});
-    }});
-    renderizarTabela();
-
-    if (chartEstratos) chartEstratos.destroy();
-    try {{
-      chartEstratos = new Chart(document.getElementById('chartEstratos'), {{
-        type: 'bar',
-        data: {{
-          labels: nomesEstratos,
-          datasets: [{{
-            label: 'IIP (%)',
-            data: valoresIIPEstratos,
-            backgroundColor: CORES.azul,
-            hoverBackgroundColor: CORES.marinho,
-            borderRadius: 8,
-            maxBarThickness: 70
-          }}]
-        }},
-        options: {{
-          responsive: true,
-          maintainAspectRatio: false,
-          layout: {{ padding: {{ top: 8, right: 8, bottom: 0, left: 0 }} }},
-          plugins: {{
-            legend: {{ display: false }},
-            tooltip: {{
-              backgroundColor: CORES.marinho,
-              titleFont: {{ family: 'Poppins', size: 13, weight: '600' }},
-              bodyFont: {{ family: 'Inter', size: 13 }},
-              padding: 10,
-              cornerRadius: 8,
-              callbacks: {{ label: (ctx) => ` IIP: ${{ctx.parsed.y}}%` }}
-            }}
-          }},
-          scales: {{
-            x: {{ ticks: {{ color: corTexto, font: {{ family: 'Inter', size: 13 }} }}, grid: {{ display: false }} }},
-            y: {{
-              beginAtZero: true,
-              ticks: {{ color: corTexto, font: {{ family: 'Inter', size: 12 }}, callback: (v) => v + '%' }},
-              grid: {{ color: corGrade }}
-            }}
-          }}
-        }}
-      }});
-    }} catch (e) {{
-      console.error("Não foi possível carregar o gráfico de estratos:", e);
-    }}
-
-    const codigosDep = ["A1", "A2", "B", "C", "D1", "D2", "E"];
-    const descricoesDep = {{
-      A1: "Depósitos elevados (caixa d'água, cisterna)",
-      A2: "Depósitos ao nível do solo (tambor, tonel, barril)",
-      B: "Depósitos móveis (vasos, garrafas, bebedouros)",
-      C: "Depósitos fixos (ralos, calhas, lajes)",
-      D1: "Pneus e sucatas",
-      D2: "Lixo (recipientes descartáveis)",
-      E: "Depósitos naturais (ocos de árvore, bromélias, rochas)"
-    }};
-    const valoresDep = codigosDep.map(cod => tg[cod] || 0);
-    const maiorValor = Math.max(...valoresDep);
-    const coresDep = valoresDep.map(v => (v === maiorValor && v > 0) ? "#c62828" : CORES.azul);
-
-    if (chartDepositos) chartDepositos.destroy();
-    try {{
-      chartDepositos = new Chart(document.getElementById('chartDepositos'), {{
-        type: 'bar',
-        data: {{
-          labels: codigosDep,
-          datasets: [{{
-            label: 'Depósitos com foco',
-            data: valoresDep,
-            backgroundColor: coresDep,
-            borderRadius: 8,
-            maxBarThickness: 60
-          }}]
-        }},
-        options: {{
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          layout: {{ padding: {{ top: 4, right: 16, bottom: 0, left: 0 }} }},
-          plugins: {{
-            legend: {{ display: false }},
-            tooltip: {{
-              backgroundColor: CORES.marinho,
-              titleFont: {{ family: 'Poppins', size: 13, weight: '600' }},
-              bodyFont: {{ family: 'Inter', size: 13 }},
-              padding: 10,
-              cornerRadius: 8,
-              callbacks: {{
-                title: (items) => descricoesDep[items[0].label] || items[0].label,
-                label: (ctx) => ` ${{ctx.parsed.x}} depósito(s) com foco`
-              }}
-            }}
-          }},
-          scales: {{
-            x: {{ beginAtZero: true, ticks: {{ color: corTexto, font: {{ family: 'Inter', size: 12 }}, precision: 0 }}, grid: {{ color: corGrade }} }},
-            y: {{ ticks: {{ color: corTexto, font: {{ family: 'Inter', size: 12 }} }}, grid: {{ display: false }} }}
-          }}
-        }}
-      }});
-    }} catch (e) {{
-      console.error("Não foi possível carregar o gráfico de depósitos:", e);
-    }}
-  }}
-
-  const MESES = ["janeiro","fevereiro","março","abril","maio","junho",
-                 "julho","agosto","setembro","outubro","novembro","dezembro"];
-
-  function formatarMesAno(iso) {{
-    const d = new Date(iso);
-    return `${{MESES[d.getUTCMonth()]}} de ${{d.getUTCFullYear()}}`;
-  }}
-
-  function montarSeletor() {{
-    const select = document.getElementById("seletorSemana");
-    SNAPSHOTS.forEach((snap, i) => {{
-      const opt = document.createElement("option");
-      opt.value = i;
-      const mesAno = formatarMesAno(snap.gerado_em);
-      opt.textContent = `${{mesAno.charAt(0).toUpperCase()}}${{mesAno.slice(1)}} (${{rotuloCiclo(snap)}})`;
-      select.appendChild(opt);
-    }});
-    select.value = SNAPSHOTS.length - 1;
-    select.addEventListener("change", () => renderizar(parseInt(select.value)));
-  }}
-
-  function montarGraficoHistorico() {{
-    const labels = SNAPSHOTS.map(s => rotuloCiclo(s));
-    const valores = SNAPSHOTS.map(s => s.total_geral.IIP || 0);
-
-    chartHistorico = new Chart(document.getElementById('chartHistorico'), {{
-      type: 'line',
-      data: {{
-        labels: labels,
-        datasets: [{{
-          label: 'IIP Geral (%)',
-          data: valores,
-          borderColor: CORES.marinho,
-          borderWidth: 3,
-          backgroundColor: 'rgba(0,43,104,0.08)',
-          pointBackgroundColor: CORES.verde,
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 2,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          tension: 0.3,
-          fill: true
-        }}]
-      }},
-      options: {{
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: {{ padding: {{ top: 8, right: 8, bottom: 0, left: 0 }} }},
-        plugins: {{
-          legend: {{ display: false }},
-          tooltip: {{
-            backgroundColor: CORES.marinho,
-            titleFont: {{ family: 'Poppins', size: 13, weight: '600' }},
-            bodyFont: {{ family: 'Inter', size: 13 }},
-            padding: 10,
-            cornerRadius: 8,
-            callbacks: {{ label: (ctx) => ` IIP: ${{ctx.parsed.y}}%` }}
-          }}
-        }},
-        scales: {{
-          x: {{ ticks: {{ color: corTexto, maxRotation: 45, minRotation: 0, font: {{ family: 'Inter', size: 12 }} }}, grid: {{ display: false }} }},
-          y: {{
-            beginAtZero: true,
-            ticks: {{ color: corTexto, font: {{ family: 'Inter', size: 12 }}, callback: (v) => v + '%' }},
-            grid: {{ color: corGrade }}
-          }}
-        }}
-      }}
-    }});
-  }}
-
-  montarSeletor();
-  renderizar(SNAPSHOTS.length - 1);
-  try {{
-    montarGraficoHistorico();
-  }} catch (e) {{
-    console.error("Não foi possível carregar o gráfico de histórico:", e);
-  }}
-
-  // ---------- Impressão ----------
-
-  function imprimirElemento(idSecao, titulo) {{
-    const el = document.getElementById(idSecao);
-    if (!el) return;
-
-    const janela = window.open("", "_blank");
-    janela.document.write(`
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>${{titulo}}</title>
-        <style>
-          @page {{ size: landscape; margin: 12mm; }}
-          body {{ font-family: 'Inter', Arial, sans-serif; color: #1c2733; padding: 10px; }}
-          h1 {{ font-family: 'Poppins', Arial, sans-serif; color: ${{CORES.marinho}}; font-size: 18px; margin-bottom: 4px; }}
-          p.legenda {{ color: #67758a; font-size: 12px; margin-top: 0; margin-bottom: 16px; }}
-          table {{ width: 100%; border-collapse: collapse; font-size: 11px; }}
-          th {{ background: ${{CORES.marinho}}; color: #fff; padding: 7px 8px; text-align: left; }}
-          td {{ padding: 5px 8px; border-top: 1px solid #ddd; }}
-          tr.linha-total td {{ background: #eef2f8; font-weight: 700; border-top: 2px solid ${{CORES.marinho}}; }}
-          .badge-tabela {{ display:inline-block; padding:2px 8px; border-radius:12px; font-size:10px; font-weight:700; color:#fff; }}
-        </style>
-      </head>
-      <body>
-        <h1>${{titulo}}</h1>
-        <p class="legenda">Setor de Endemias e Vetores — Prefeitura Municipal de Ponta Porã · Impresso em ${{new Date().toLocaleString('pt-BR')}}</p>
-        ${{el.outerHTML}}
-      </body>
-      </html>
-    `);
-    janela.document.close();
-    janela.focus();
-    janela.onload = () => janela.print();
-    // fallback caso onload não dispare a tempo
-    setTimeout(() => janela.print(), 400);
-  }}
-
-  document.getElementById("btnImprimirConsolidado").addEventListener("click", () => {{
-    imprimirElemento("secaoConsolidado", "Consolidado por Estrato — LIRAa");
-  }});
-
-  document.getElementById("btnImprimirDetalhe").addEventListener("click", () => {{
-    imprimirElemento("secaoDetalhe", "Detalhamento por Área — LIRAa");
-  }});
-
-  document.getElementById("btnImprimirTudo").addEventListener("click", () => {{
-    window.print();
-  }});
-
-  // ---------- Excel ----------
-
-  const COLUNAS_EXCEL = [
-    "AREA", "Tubitos", "Residencia", "Comercio", "TB", "Outros", "PE", "Total_Imoveis",
-    "A1", "A2", "B", "C", "D1", "D2", "E", "Total_Aegypti",
-    "Resid_Aegypti", "Comercio_Aegypti", "TB_Aegypti", "Outros_Aegypti", "Total_Imoveis_Aegypti",
-    "Resid_Albopictus", "Comercio_Albopictus", "TB_Albopictus", "Outros_Albopictus", "Total_Imoveis_Albopictus"
-  ];
-
-  function baixarExcel() {{
-    const indice = parseInt(document.getElementById("seletorSemana").value);
-    const snap = SNAPSHOTS[indice];
-    const nomesEstratos = Object.keys(snap.estratos);
-    const wb = XLSX.utils.book_new();
-    const todasAreas = [];
-
-    nomesEstratos.forEach((nome, i) => {{
-      const bloco = snap.estratos[nome];
-      const linhas = bloco.areas.map(a => COLUNAS_EXCEL.map(c => a[c] ?? 0));
-      todasAreas.push(...linhas);
-      const linhaTotal = COLUNAS_EXCEL.map(c => c === "AREA" ? `TOTAL ${{nome.toUpperCase()}}` : (bloco.total[c] ?? 0));
-      const ws = XLSX.utils.aoa_to_sheet([COLUNAS_EXCEL, ...linhas, linhaTotal]);
-      XLSX.utils.book_append_sheet(wb, ws, `Estrato_${{i + 1}}`);
-    }});
-
-    const linhaTotalGeral = COLUNAS_EXCEL.map(c => c === "AREA" ? "TOTAL GERAL" : (snap.total_geral[c] ?? 0));
-    const wsTotal = XLSX.utils.aoa_to_sheet([COLUNAS_EXCEL, ...todasAreas, linhaTotalGeral]);
-    XLSX.utils.book_append_sheet(wb, wsTotal, "Total_Geral");
-
-    const nomeArquivo = `LIRA_${{snap.semana_inicio}}_${{snap.semana_fim}}.xlsx`;
-    XLSX.writeFile(wb, nomeArquivo);
-  }}
-
-  document.getElementById("btnExcel").addEventListener("click", baixarExcel);
-</script>
-
-</body>
-</html>
-"""
-
-    os.makedirs("docs", exist_ok=True)
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        f.write(html)
+        f.write("/* Gerado por generate_dashboard.py — não editar à mão. */\n")
+        f.write("window.LIRA_DATA = ")
+        json.dump(dados, f, ensure_ascii=False, separators=(",", ":"))
+        f.write(";\n")
 
-    print(f"Dashboard gerado em {OUTPUT_PATH} com {len(lista)} snapshot(s).")
+    com = sum(1 for l in dados["levantamentos"] if l["status"] == "com_dados")
+    sem = len(dados["levantamentos"]) - com
+    print(f"Dados do site gerados em {OUTPUT_PATH}: {com} levantamento(s) com dados, {sem} sem dados.")
 
 
 if __name__ == "__main__":

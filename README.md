@@ -1,154 +1,123 @@
-# Dashboard LIRAa
+# Dashboard LIRAa — Ponta Porã
 
-Coleta automática dos dados do LIRAa no eVisita (Secretaria de Saúde de MS)
-e publicação de um dashboard em HTML, atualizado automaticamente **dias
-úteis às 12h e às 3h da manhã** (horário de Mato Grosso do Sul).
+Coleta automática dos dados do LIRAa no eVisita (Secretaria de Saúde de MS) e
+publicação de um site (GitHub Pages, pasta `docs/`) com **Home**, **Dashboard
+de comparação** e **Detalhes dos levantamentos**.
 
-## O que este projeto faz
+## Páginas
 
-1. `lira_scraper.py` — faz login no eVisita com Selenium, percorre as
-   áreas dos 4 estratos e extrai os dados de cada uma. Salva:
-   - `data/LIRA_COMPLETO_latest.xlsx` (a planilha, sempre sobrescrita)
-   - `data/history.json` — **um único arquivo** com todos os períodos já
-     coletados, um por chave `"semana_inicio-semana_fim"`. Rodar de novo
-     no mesmo ciclo apenas atualiza os valores dessa chave — não cria
-     arquivo novo nem duplica entradas.
-2. `generate_dashboard.py` — lê `data/history.json` e gera
-   `docs/index.html`: cards por estrato, gráfico de IIP por estrato,
-   gráfico de histórico e a tabela detalhada por área, com um seletor
-   no topo para trocar entre os meses/ciclos já coletados.
-3. `.github/workflows/lira.yml` — roda os dois scripts automaticamente
-   no GitHub Actions e publica o resultado de volta no repositório.
-   O GitHub Pages serve o conteúdo da pasta `docs/`.
+| Página | Arquivo | O que mostra |
+|---|---|---|
+| Início | `docs/index.html` | Levantamento principal (**Novembro/2026**), IIP e IB com classificação, legenda oficial, estratos, evolução, ranking e criadouros |
+| Dashboard | `docs/dashboard.html` | Filtros (levantamento, comparação, ciclo, período, estrato, bairro), evolução do IIP e IB, variação entre ciclos, comparação por estrato, imóveis pesquisados/positivos, ranking de bairros, principais criadouros e tabela histórica completa (por levantamento e por bairro, com CSV) |
+| Levantamentos | `docs/levantamento.html?id=318-319` | Detalhes de um levantamento: consolidado por estrato, detalhamento por área, gráficos, Excel e impressão |
+
+Enquanto o levantamento principal ainda não tem dados coletados, a Home avisa
+isso e mostra o **último levantamento com dados**, claramente identificado.
+Nenhum número é estimado ou inventado; informações ausentes são sinalizadas.
+
+## Classificação de risco (regras únicas)
+
+Todas as regras ficam em **`regras_classificacao.json`** (lido por
+`classificacao.py` e embutido no site). Nenhuma página repete esses limites.
+
+* **IIP** — faixas oficiais do Ministério da Saúde (Diretrizes Nacionais, 2009):
+  Satisfatório / baixo risco `< 1%`; Alerta / risco médio `1% a 3,9%`;
+  Risco / alto risco `> 3,9%`.
+* **IB** — usa as **mesmas faixas do IIP**, conforme definido pelo Setor de
+  Endemias (o Ministério da Saúde publica faixas oficiais só para o IIP; para o
+  IB define apenas o cálculo: depósitos positivos ÷ imóveis pesquisados × 100).
+  A legenda do IB indica "mesmas faixas do IIP · critério do setor". Para mudar,
+  edite a seção `ib` do JSON e rode `python generate_dashboard.py`.
+
+## Levantamentos e automação
+
+Os levantamentos ficam em **`config_levantamentos.json`** (id_ano, id_ciclo,
+semanas, tipo de coleta). A chave de cada um é `semana_inicio-semana_fim`, a
+mesma de `data/history.json`: rodar de novo **atualiza** o registro, nunca
+duplica.
+
+* **Janeiro/2026** (`id_ciclo=160`, semanas `288-289`): recuperação **única**.
+  Na próxima atualização o scraper coleta e grava em `data/estado_coleta.json`
+  que concluiu; depois disso não roda mais. Se o eVisita ainda não devolver
+  dados, nada é gravado e ele tenta de novo na execução seguinte.
+* **Novembro/2026** (`id_ciclo=165`, semanas `331-332`): levantamento corrente,
+  coletado em toda execução e definido como Home (`"home"` no config).
+* **Agendamento** (`.github/workflows/lira.yml`): todos os dias de **03/11/2026
+  a 15/11/2026**, às **03:00** e **12:00** no horário de Ponta Porã (UTC−4) —
+  cron `0 7,16 3-15 11 *` em UTC. O scraper confere a janela real com
+  `--respeitar-janela`, então nada roda fora dela (nem em novembro de 2027).
+  A execução manual (“Run workflow”) ignora a janela.
+* Um levantamento com erro não impede os demais; resultados sem nenhum imóvel
+  pesquisado não sobrescrevem dados existentes.
+
+Rótulos de semana/período de Janeiro e Novembro são derivados do ID da semana
+(âncora: ID 318 ↔ SE 32/2026) e aparecem marcados como **estimados**. Se
+quiser fixar a SE exata, informe `"se_inicio": [2026, 2]` no levantamento.
+
+## Correção de estrato (Santa Izabel)
+
+A área `423 - SANTA IZABEL` vem do eVisita dentro do Estrato 3, mas pertence ao
+**Estrato 2**. A correção (`areas_estrato` em `config_levantamentos.json`) é
+aplicada só na exibição: `data/history.json` não é alterado, os valores das
+áreas ficam idênticos, os totais dos estratos são refeitos somando as áreas e o
+total geral não muda.
 
 ## Passo a passo para publicar
 
-### 1. Criar o repositório
+1. Crie o repositório e envie estes arquivos (`git init`, `git add .`, `git push`).
+2. Em **Settings → Secrets and variables → Actions**, cadastre `LIRA_USUARIO`
+   (CPF) e `LIRA_SENHA`. Nunca coloque credenciais no código.
+3. Em **Settings → Pages**, escolha “Deploy from a branch”, branch `main`,
+   pasta `/docs`.
+4. Teste em **Actions → Atualizar LIRAa → Run workflow**. Esse primeiro run já
+   executa a recuperação de janeiro.
 
-No GitHub, crie um repositório novo (pode ser privado). Depois, na sua
-máquina, dentro desta pasta:
-
-```bash
-git init
-git add .
-git commit -m "Projeto inicial LIRAa"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-git push -u origin main
-```
-
-### 2. Cadastrar as credenciais como Secrets (NUNCA no código)
-
-No repositório: **Settings → Secrets and variables → Actions → New repository secret**
-
-Cadastre dois secrets:
-
-| Nome | Valor |
-|---|---|
-| `LIRA_USUARIO` | seu CPF de login no eVisita |
-| `LIRA_SENHA` | sua senha |
-
-Esses valores ficam criptografados; nenhum colaborador ou log consegue
-lê-los, e nada disso aparece no código-fonte.
-
-### 3. Ativar o GitHub Pages
-
-**Settings → Pages → Source** → escolha **"Deploy from a branch"**,
-branch `main`, pasta `/docs`. Salve.
-
-Depois do primeiro workflow rodar com sucesso, o dashboard fica
-disponível em:
-
-```
-https://SEU_USUARIO.github.io/SEU_REPOSITORIO/
-```
-
-### 4. Testar manualmente antes de esperar o horário agendado
-
-Na aba **Actions** do repositório, escolha o workflow **"Atualizar
-LIRAa"** e clique em **"Run workflow"**. Acompanhe o log — se o login
-falhar, revise os Secrets; se a extração falhar, confira se o HTML do
-site mudou de estrutura.
-
-### 5. Horários automáticos
-
-O workflow já está configurado para rodar, dias úteis:
-- 5h da manhã
-- 12h (meio-dia)
-- 19h
-
-(Convertidos para UTC no arquivo `lira.yml`, já que o GitHub Actions
-usa UTC. Não precisa mexer em nada — mas se um dia o horário de verão
-voltar a valer em MS, os horários de cron precisarão ser ajustados em
-1 hora.)
-
-## Migrando de uma versão anterior (arquivos data/latest.json e data/history/*.json)
-
-Se seu repositório ainda tem a estrutura antiga (`data/latest.json` +
-vários arquivos em `data/history/`), rode uma vez:
-
-```bash
-python migrar_para_historico_unico.py
-```
-
-Isso junta tudo em `data/history.json`. Depois de conferir que o
-dashboard continua mostrando os mesmos períodos, apague
-`data/latest.json` e a pasta `data/history/` — a partir daí só o
-`data/history.json` é usado.
-
-## Identidade visual
-
-O dashboard usa a marca da Prefeitura Municipal de Ponta Porã:
-
-- Logo em `docs/assets/logo_pmpp.png` — **esse arquivo precisa
-  permanecer no repositório** (não é gerado pelo script, é um asset
-  fixo). Se precisar trocar a logo, só substituir esse arquivo
-  (mantendo o mesmo nome) e rodar `generate_dashboard.py` de novo.
-- Paleta oficial: azul-marinho `#002B68`, azul `#007ECA`, verde
-  `#00B93B` e amarelo `#FFB900` (extraídas do próprio logo).
-- Fontes: Poppins (títulos) e Inter (texto), carregadas via Google Fonts.
-
-## Duas formas de identificar a semana
-
-O projeto usa dois conceitos separados, como no site:
-
-- **`week_id`** (ex.: `318`) — o ID contínuo do eVisita, usado **somente**
-  para montar a URL de busca (`SEMANA_INICIO`/`SEMANA_FIM` em
-  `lira_scraper.py`). Não tem significado de calendário isolado.
-- **`week_number`** (ex.: `SE 31/2026`) — a Semana Epidemiológica
-  padrão (domingo a sábado, reinicia a cada ano), calculada a partir da
-  **data real da coleta** (não do `week_id`) e usada **somente** na
-  interface do dashboard. O cálculo está em `semana_util.py`, usando a
-  biblioteca `epiweeks`.
-
-Como o ciclo do LIRAa usa dois `week_id`s consecutivos (ex.: 318 e 319),
-a segunda Semana Epidemiológica é a primeira + 1 (com virada de ano
-tratada automaticamente).
-
-## Trocar a semana do ciclo
-
-As variáveis `SEMANA_INICIO` e `SEMANA_FIM` estão fixas no topo de
-`lira_scraper.py` (hoje: `318` e `319`). Quando o ciclo mudar no site,
-edite esses dois valores e faça commit/push — a próxima execução
-automática já usa os novos.
-
-## Rodando localmente (fora do GitHub Actions)
+## Rodando localmente
 
 ```bash
 pip install -r requirements.txt
-export LIRA_USUARIO="seu_cpf"
-export LIRA_SENHA="sua_senha"
-python lira_scraper.py
-python generate_dashboard.py
+export LIRA_USUARIO="seu_cpf" LIRA_SENHA="sua_senha"
+python lira_scraper.py --dry-run        # só mostra o que seria coletado
+python lira_scraper.py                  # coleta (janeiro pendente + novembro)
+python lira_scraper.py --alvo 288-289   # força um levantamento específico
+python generate_dashboard.py            # gera docs/assets/data/lira-data.js
 ```
 
-Depois abra `docs/index.html` no navegador.
+Abra `docs/index.html` no navegador (funciona também direto do arquivo).
 
-## Sobre segurança
+## Testes
 
-- As credenciais nunca ficam no código — só como Secrets do GitHub.
-- Se em algum momento a senha `SENHA = "350970"` do script original
-  chegou a ser commitada em algum repositório (mesmo privado), o ideal
-  é trocá-la no eVisita, já que qualquer pessoa com acesso ao
-  histórico do Git (inclusive commits antigos apagados depois) consegue
-  recuperá-la.
+```bash
+pip install pytest playwright pyyaml && playwright install chromium
+python -m pytest tests -q
+```
+
+Cobrem a recuperação única de janeiro, a configuração de novembro, a janela e
+o cron (UTC−4), a não duplicação, a integridade dos dados, a classificação
+(Python e JavaScript idênticos), a legenda, os filtros, os gráficos e a
+ausência de rolagem horizontal em 360/390/768/1280 px.
+
+## Estrutura
+
+```
+config_levantamentos.json   levantamentos, home e janela de automação
+regras_classificacao.json   regras únicas de classificação (IIP/IB)
+classificacao.py            classificador Python das mesmas regras
+lira_scraper.py             coleta (multi-levantamento, idempotente)
+generate_dashboard.py       gera docs/assets/data/lira-data.js
+semana_util.py              semanas epidemiológicas (SE)
+data/                       history.json, planilha, estado_coleta.json
+docs/                       site estático (CSS/JS em assets/, libs em assets/vendor/)
+```
+
+Os scripts `importar_xlsx_historico.py` e `migrar_para_historico_unico.py`
+continuam funcionando como antes.
+
+## Identidade visual e segurança
+
+Marca da Prefeitura Municipal de Ponta Porã (`docs/assets/logo_pmpp.png` —
+mantenha o arquivo), paleta `#002B68`, `#007ECA`, `#00B93B`, `#FFB900`, fontes
+Poppins/Inter, tema claro/escuro. Chart.js e SheetJS ficam em
+`docs/assets/vendor/` (sem depender de CDN). Se a senha `SENHA = "350970"` do
+script original chegou a ser commitada em algum momento, troque-a no eVisita.

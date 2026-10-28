@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Comparação dos LIRAa · Ponta Porã</title>
+<meta name="description" content="Histórico e comparação dos LIRAa de Ponta Porã: evolução do IIP e do IB, variação entre ciclos, ranking de bairros e principais criadouros.">
+<link rel="icon" href="assets/logo_pmpp.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/lira.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main class="container" id="conteudo">
+  <div class="page-head">
+    <div>
+      <h1>Dashboard — comparação dos LIRAa</h1>
+      <p>Histórico dos levantamentos, evolução do IIP e do IB, variação entre ciclos, ranking de bairros e principais criadouros.</p>
+    </div>
+    <div class="acoes">
+      <button class="btn" id="btnCsv" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>Baixar tabela (CSV)</button>
+      <button class="btn" id="btnImprimir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8V3h10v5M7 17H4v-7h16v7h-3M7 14h10v7H7z"/></svg>Imprimir</button>
+    </div>
+  </div>
+
+  <section class="card filtros" id="filtros" aria-label="Filtros">
+    <button class="btn filtros-toggle" id="btnFiltros" type="button" aria-expanded="true">Filtros</button>
+    <div class="filtros-grade">
+      <div class="campo"><label for="fFoco">Levantamento</label><select id="fFoco"></select></div>
+      <div class="campo"><label for="fComp">Comparar com</label><select id="fComp"></select></div>
+      <div class="campo"><label for="fCiclo">Ciclo (eVisita)</label><select id="fCiclo"></select></div>
+      <div class="campo"><label for="fEstrato">Estrato</label><select id="fEstrato"></select></div>
+      <div class="campo"><label for="fBairro">Bairro</label><select id="fBairro"></select></div>
+      <div class="campo"><label for="fDe">Período: de</label><input type="date" id="fDe"></div>
+      <div class="campo"><label for="fAte">Período: até</label><input type="date" id="fAte"></div>
+      <div class="campo" style="justify-content:flex-end"><button class="btn" id="btnLimpar" type="button">Limpar filtros</button></div>
+    </div>
+    <div class="filtros-rodape">
+      <div class="chips" id="chips" aria-live="polite"></div>
+      <span class="contagem" id="contagem"></span>
+    </div>
+  </section>
+
+  <div id="semResultado" hidden class="secao">
+    <div class="card"><div class="vazio"><strong>Nenhum levantamento com dados neste filtro</strong>Amplie o período ou limpe os filtros.</div></div>
+  </div>
+
+  <div id="painel">
+    <section class="secao" aria-labelledby="tResumo">
+      <div class="secao-titulo"><h2 id="tResumo">Resumo do levantamento</h2><p id="subResumo"></p></div>
+      <div class="grid g-kpi" id="kpis"></div>
+    </section>
+
+    <section class="secao" aria-labelledby="tClass">
+      <div class="secao-titulo"><h2 id="tClass">Classificação de risco</h2><p id="subClass"></p></div>
+      <div class="grid g-2" id="legendas"></div>
+    </section>
+
+    <section class="secao" aria-labelledby="tEvol">
+      <div class="secao-titulo"><h2 id="tEvol">Evolução do IIP e do IB</h2><p>Todos os levantamentos do filtro, com as faixas de risco do IIP ao fundo.</p></div>
+      <div class="card">
+        <div class="chart-head">
+          <div class="legenda-chart"><span><i class="linha" style="background:var(--serie-1)"></i>IIP (%)</span><span><i class="linha" style="background:var(--serie-2)"></i>IB (por 100 imóveis)</span></div>
+          <div class="alterna" role="group" aria-label="Forma de exibição"><button type="button" id="vGrafico" aria-pressed="true">Gráfico</button><button type="button" id="vTabela" aria-pressed="false">Tabela</button></div>
+        </div>
+        <div class="chart-wrap alto" id="boxEvol"><canvas id="gEvolucao" role="img" aria-label="Evolução do IIP e do IB"></canvas></div>
+        <div class="tabela-scroll tabela-chart" id="tabEvol" hidden></div>
+        <p class="card-sub" style="margin:8px 0 0">IIP e IB coincidem quando cada imóvel positivo tem um único depósito positivo (o IB é desenhado atrás, mais grosso).</p>
+      </div>
+    </section>
+
+    <section class="secao" aria-labelledby="tVar">
+      <div class="secao-titulo"><h2 id="tVar">Variação e comparação entre ciclos</h2><p id="subComp"></p></div>
+      <div class="grid g-2">
+        <div class="card">
+          <h3 class="card-titulo">Variação do IIP entre levantamentos consecutivos</h3>
+          <p class="card-sub">Pontos percentuais (p.p.) em relação ao levantamento anterior do filtro. Alta = piora.</p>
+          <div class="chart-wrap baixo"><canvas id="gVariacao" role="img" aria-label="Variação do IIP entre levantamentos"></canvas></div>
+          <div id="vazioVar"></div>
+        </div>
+        <div class="card">
+          <h3 class="card-titulo">IIP por estrato: levantamento × comparação</h3>
+          <p class="card-sub" id="subGrupo"></p>
+          <div class="legenda-chart" id="legGrupo"></div>
+          <div class="chart-wrap baixo"><canvas id="gComp" role="img" aria-label="IIP por estrato nos dois levantamentos comparados"></canvas></div>
+        </div>
+        <div class="card span-2">
+          <h3 class="card-titulo">Comparativo dos indicadores</h3>
+          <div class="tabela-scroll" style="max-height:none" id="tabComp"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="secao" aria-labelledby="tImo">
+      <div class="secao-titulo"><h2 id="tImo">Imóveis pesquisados e positivos</h2><p>Por levantamento, no recorte filtrado.</p></div>
+      <div class="grid g-2">
+        <div class="card"><h3 class="card-titulo">Imóveis pesquisados</h3><div class="chart-wrap baixo"><canvas id="gPesq" role="img" aria-label="Imóveis pesquisados por levantamento"></canvas></div></div>
+        <div class="card"><h3 class="card-titulo">Imóveis positivos para Aedes aegypti</h3><div class="chart-wrap baixo"><canvas id="gPos" role="img" aria-label="Imóveis positivos por levantamento"></canvas></div></div>
+      </div>
+    </section>
+
+    <section class="secao" id="ranking" aria-labelledby="tRank">
+      <div class="secao-titulo"><h2 id="tRank">Ranking de bairros</h2><p id="subRank"></p></div>
+      <div class="card">
+        <div class="chart-head">
+          <p class="card-sub" style="margin:0">Ordenado pelo IIP (maior primeiro). Cada bairro tem poucos imóveis pesquisados: leia o IIP junto de “positivos de pesquisados”.</p>
+          <div class="alterna" role="group" aria-label="Quantidade de bairros"><button type="button" id="rTop" aria-pressed="true">Top 10</button><button type="button" id="rTodos" aria-pressed="false">Todos</button></div>
+        </div>
+        <div id="listaRanking"></div>
+      </div>
+    </section>
+
+    <section class="secao" id="criadouros" aria-labelledby="tCri">
+      <div class="secao-titulo"><h2 id="tCri">Principais criadouros</h2><p>Depósitos positivos para Aedes aegypti por tipo (A1 a E).</p></div>
+      <div class="grid g-2">
+        <div class="card"><h3 class="card-titulo" id="tCriFoco">Levantamento selecionado</h3><p class="card-sub">Do tipo mais frequente ao menos frequente.</p><div id="listaCriadouros"></div></div>
+        <div class="card"><h3 class="card-titulo">Histórico por tipo de depósito</h3><p class="card-sub">Nº de depósitos positivos em cada levantamento do filtro.</p><div class="tabela-scroll" style="max-height:none" id="tabCriadouros"></div></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="secao" id="historico" aria-labelledby="tHist">
+    <div class="secao-titulo"><h2 id="tHist">Tabela histórica completa</h2><p id="subHist"></p></div>
+    <div class="card flush">
+      <div style="padding:14px 16px 0">
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tabLev" aria-selected="true" type="button">Por levantamento</button>
+          <button role="tab" id="tabBai" aria-selected="false" type="button">Por bairro (IIP)</button>
+        </div>
+      </div>
+      <div class="tabela-scroll" id="tabHist"></div>
+      <p class="nota-tabela" id="notaHist"></p>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/data/lira-data.js"></script>
+<script src="assets/vendor/chart.umd.min.js"></script>
+<script src="assets/js/lira-core.js"></script>
+<script src="assets/js/lira-widgets.js"></script>
+<script src="assets/js/dashboard.js"></script>
+</body>
+</html>

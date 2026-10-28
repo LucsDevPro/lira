@@ -1,0 +1,74 @@
+{
+  "_comentario": "Configuração dos levantamentos (LIRAa). 'coleta' define como cada um é tratado pelo scraper: 'automatica' = coletado em toda execução (dentro da janela); 'recuperacao_unica' = coletado UMA vez, na próxima atualização, e marcado como concluído em data/estado_coleta.json; 'somente_historico' = já está em data/history.json e não é coletado de novo. A chave de cada levantamento é 'semana_inicio-semana_fim' (a mesma usada em data/history.json), então rodar de novo apenas atualiza o mesmo registro.",
+  "municipio": {
+    "nome": "Ponta Porã",
+    "uf": "MS",
+    "id_municipio": 62,
+    "id_regiao": 388
+  },
+  "fuso_horario": {
+    "nome": "Ponta Porã (UTC−4)",
+    "offset": "-04:00"
+  },
+  "home": "331-332",
+  "areas_estrato": {
+    "_comentario": "Correção de estrato aplicada SÓ na exibição (data/history.json não é alterado). Chave = código da área; valor = estrato correto.",
+    "423": "Estrato 2"
+  },
+  "automacao": {
+    "janela_inicio": "2026-11-03",
+    "janela_fim": "2026-11-15",
+    "horarios_locais": [
+      "03:00",
+      "12:00"
+    ],
+    "cron_utc": "0 7,16 3-15 11 *"
+  },
+  "levantamentos": [
+    {
+      "chave": "288-289",
+      "nome": "Janeiro/2026",
+      "mes": "2026-01",
+      "id_atividade": 1,
+      "id_ano": 14,
+      "id_ciclo": 160,
+      "semana_inicio": 288,
+      "semana_fim": 289,
+      "coleta": "recuperacao_unica"
+    },
+    {
+      "chave": "307-308",
+      "nome": "Maio/2026",
+      "mes": "2026-05",
+      "id_atividade": 1,
+      "id_ano": 14,
+      "id_ciclo": null,
+      "semana_inicio": 307,
+      "semana_fim": 308,
+      "coleta": "somente_historico",
+      "observacao": "Importado de planilha antiga; o id_ciclo do eVisita não foi registrado."
+    },
+    {
+      "chave": "318-319",
+      "nome": "Agosto/2026",
+      "mes": "2026-08",
+      "id_atividade": 1,
+      "id_ano": 14,
+      "id_ciclo": 163,
+      "semana_inicio": 318,
+      "semana_fim": 319,
+      "coleta": "somente_historico"
+    },
+    {
+      "chave": "331-332",
+      "nome": "Novembro/2026",
+      "mes": "2026-11",
+      "id_atividade": 1,
+      "id_ano": 14,
+      "id_ciclo": 165,
+      "semana_inicio": 331,
+      "semana_fim": 332,
+      "coleta": "automatica"
+    }
+  ]
+}

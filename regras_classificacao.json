@@ -1,0 +1,83 @@
+{
+  "versao": "2026-10-27",
+  "descricao": "Fonte única das regras de classificação de risco. Lida por classificacao.py (Python) e embutida em docs/assets/data/lira-data.js para o site (docs/assets/js/lira-core.js). NÃO duplicar estes limites em nenhum outro lugar.",
+  "indices": {
+    "iip": {
+      "nome": "Índice de Infestação Predial",
+      "sigla": "IIP",
+      "unidade": "%",
+      "formula": "imóveis positivos para Aedes aegypti ÷ imóveis pesquisados × 100",
+      "oficial": true,
+      "fonte": "Ministério da Saúde — Diretrizes Nacionais para a Prevenção e Controle de Epidemias de Dengue (2009) e Manual do LIRAa",
+      "nota": "Faixas oficiais do Ministério da Saúde para o IIP.",
+      "faixas": [
+        {
+          "id": "baixo",
+          "nome_oficial": "Satisfatório",
+          "rotulo": "Baixo risco",
+          "limite_superior": 1.0,
+          "superior_inclusivo": false,
+          "texto_limite": "abaixo de 1%",
+          "texto_curto": "< 1%"
+        },
+        {
+          "id": "medio",
+          "nome_oficial": "Alerta",
+          "rotulo": "Risco médio",
+          "limite_superior": 3.9,
+          "superior_inclusivo": true,
+          "texto_limite": "de 1% a 3,9%",
+          "texto_curto": "1% a 3,9%"
+        },
+        {
+          "id": "alto",
+          "nome_oficial": "Risco",
+          "rotulo": "Alto risco",
+          "limite_superior": null,
+          "superior_inclusivo": false,
+          "texto_limite": "acima de 3,9%",
+          "texto_curto": "> 3,9%"
+        }
+      ]
+    },
+    "ib": {
+      "nome": "Índice de Breteau",
+      "sigla": "IB",
+      "unidade": "",
+      "formula": "depósitos positivos para Aedes aegypti ÷ imóveis pesquisados × 100",
+      "oficial": false,
+      "fonte": "Critério adotado pelo Setor de Endemias de Ponta Porã: o IB usa as mesmas faixas do IIP. Cálculo conforme a metodologia do LIRAa (depósitos positivos por 100 imóveis pesquisados).",
+      "nota": "O IB usa as mesmas faixas do IIP, conforme definido pelo Setor de Endemias. O Ministério da Saúde publica faixas oficiais de classificação apenas para o IIP.",
+      "faixas": [
+        {
+          "id": "baixo",
+          "nome_oficial": "Satisfatório",
+          "rotulo": "Baixo risco",
+          "limite_superior": 1.0,
+          "superior_inclusivo": false,
+          "texto_limite": "abaixo de 1",
+          "texto_curto": "< 1"
+        },
+        {
+          "id": "medio",
+          "nome_oficial": "Alerta",
+          "rotulo": "Risco médio",
+          "limite_superior": 3.9,
+          "superior_inclusivo": true,
+          "texto_limite": "de 1 a 3,9",
+          "texto_curto": "1 a 3,9"
+        },
+        {
+          "id": "alto",
+          "nome_oficial": "Risco",
+          "rotulo": "Alto risco",
+          "limite_superior": null,
+          "superior_inclusivo": false,
+          "texto_limite": "acima de 3,9",
+          "texto_curto": "> 3,9"
+        }
+      ],
+      "mesmas_faixas_do_iip": true
+    }
+  }
+}
