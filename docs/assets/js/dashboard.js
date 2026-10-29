@@ -6,7 +6,6 @@
 
   function $(id) { return document.getElementById(id); }
   function r2(v) { return v == null ? null : Math.round((v + 1e-12) * 100) / 100; }
-  function cicloKey(l) { return l.id_ciclo == null ? "ni" : String(l.id_ciclo); }
 
   /* rótulos de valor nas barras (poucas barras: ok rotular) */
   Chart.register({
@@ -19,7 +18,7 @@
           var v = ds.data[k];
           if (v == null) return;
           ctx.save();
-          ctx.font = "700 11.5px Inter, sans-serif"; ctx.fillStyle = L.css("--ink"); ctx.textAlign = "center";
+          ctx.font = "700 11.5px 'Plus Jakarta Sans', sans-serif"; ctx.fillStyle = L.css("--ink"); ctx.textAlign = "center";
           var neg = v < 0;
           ctx.fillText(opt.fmt(v), bar.x, neg ? bar.y + 14 : bar.y - 5);
           ctx.restore();
@@ -28,7 +27,7 @@
     }
   });
 
-  var S = { foco: "", comp: "auto", ciclo: "", estrato: "", bairro: "", de: "", ate: "", todos: false, tabela: false, aba: "lev", sort: {} };
+  var S = { foco: "", comp: "auto", estrato: "", bairro: "", de: "", ate: "", todos: false, tabela: false, aba: "lev", sort: {} };
   var ALL = L.levantamentos, COM = L.comDados;
 
   /* ---------- listas para os filtros ---------- */
@@ -38,13 +37,7 @@
 
   function opt(v, t, sel) { return '<option value="' + esc(v) + '"' + (sel ? " selected" : "") + ">" + esc(t) + "</option>"; }
 
-  function montarCiclos() {
-    var ciclos = {}, temNI = false;
-    ALL.forEach(function (l) { if (l.id_ciclo == null) temNI = true; else (ciclos[l.id_ciclo] = ciclos[l.id_ciclo] || []).push(l.nome); });
-    var h = opt("", "Todos os ciclos", true);
-    Object.keys(ciclos).sort(function (a, b) { return a - b; }).forEach(function (c) { h += opt(c, "Ciclo " + c + " · " + ciclos[c].join(", ")); });
-    if (temNI) h += opt("ni", "Ciclo não informado");
-    $("fCiclo").innerHTML = h;
+  function montarFiltrosFixos() {
     $("fEstrato").innerHTML = opt("", "Todos os estratos", true) + ESTRATOS.map(function (e) { return opt(e, e); }).join("");
   }
   function montarBairros() {
@@ -59,7 +52,6 @@
 
   /* ---------- filtro ---------- */
   function noFiltro(l) {
-    if (S.ciclo && cicloKey(l) !== S.ciclo) return false;
     if (S.de && l.periodo.fim < S.de) return false;
     if (S.ate && l.periodo.inicio > S.ate) return false;
     return true;
@@ -111,7 +103,7 @@
 
   /* ---------- atualização geral ---------- */
   function atualizar() {
-    S.ciclo = $("fCiclo").value; S.estrato = $("fEstrato").value; S.bairro = $("fBairro").value;
+    S.estrato = $("fEstrato").value; S.bairro = $("fBairro").value;
     S.de = $("fDe").value; S.ate = $("fAte").value;
     if (S.bairro && S.estrato && BAIRROS[S.bairro].estrato !== S.estrato) { S.bairro = ""; }
     montarBairros();
@@ -152,7 +144,6 @@
   function chips() {
     var c = [];
     function add(txt, limpar) { c.push('<span class="chip-filtro">' + esc(txt) + '<button type="button" aria-label="Remover filtro ' + esc(txt) + '" data-limpar="' + limpar + '">×</button></span>'); }
-    if (S.ciclo) add(S.ciclo === "ni" ? "Ciclo não informado" : "Ciclo " + S.ciclo, "ciclo");
     if (S.estrato) add(S.estrato, "estrato");
     if (S.bairro) add("Bairro: " + BAIRROS[S.bairro].nome, "bairro");
     if (S.de) add("de " + L.fmtData(S.de), "de");
@@ -160,7 +151,7 @@
     $("chips").innerHTML = c.join("") || '<span class="contagem">Nenhum filtro ativo</span>';
     $("chips").querySelectorAll("button").forEach(function (b) {
       b.addEventListener("click", function () {
-        var m = { ciclo: "fCiclo", estrato: "fEstrato", bairro: "fBairro", de: "fDe", ate: "fAte" }[b.getAttribute("data-limpar")];
+        var m = { estrato: "fEstrato", bairro: "fBairro", de: "fDe", ate: "fAte" }[b.getAttribute("data-limpar")];
         $(m).value = ""; atualizar();
       });
     });
@@ -370,7 +361,7 @@
   }
 
   /* ---------- eventos ---------- */
-  ["fFoco", "fComp", "fCiclo", "fEstrato", "fBairro", "fDe", "fAte"].forEach(function (id) {
+  ["fFoco", "fComp", "fEstrato", "fBairro", "fDe", "fAte"].forEach(function (id) {
     $(id).addEventListener("change", function () {
       if (id === "fFoco") S.foco = $("fFoco").value;
       if (id === "fComp") S.comp = $("fComp").value;
@@ -379,7 +370,7 @@
     });
   });
   $("btnLimpar").addEventListener("click", function () {
-    ["fCiclo", "fEstrato", "fBairro", "fDe", "fAte"].forEach(function (id) { $(id).value = ""; });
+    ["fEstrato", "fBairro", "fDe", "fAte"].forEach(function (id) { $(id).value = ""; });
     S.foco = ""; S.comp = "auto"; S.bairro = ""; atualizar();
   });
   $("rTop").addEventListener("click", function () { S.todos = false; atualizar(); });
@@ -397,6 +388,36 @@
   if (window.matchMedia("(max-width: 760px)").matches) { $("filtros").classList.add("fechado"); $("btnFiltros").setAttribute("aria-expanded", "false"); }
   document.addEventListener("lira:tema", atualizar);
 
-  montarCiclos(); montarBairros();
+  /* menu de seções com destaque da seção visível */
+  (function () {
+    var links = [].slice.call(document.querySelectorAll("#subnav a"));
+    var alvos = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+    var lista = links[0].parentNode, ind = document.createElement("span");
+    ind.className = "sub-ind"; ind.setAttribute("aria-hidden", "true"); lista.insertBefore(ind, lista.firstChild); lista.classList.add("com-ind");
+    function marcar(i) {
+      links.forEach(function (a, k) {
+        a.classList.toggle("ativo", k === i);
+        if (k === i) {
+          ind.style.width = a.offsetWidth + "px"; ind.style.transform = "translateX(" + a.offsetLeft + "px)"; ind.classList.add("pronto");
+          if (lista.scrollTo) lista.scrollTo({ left: a.offsetLeft - 20, behavior: "smooth" });
+        }
+      });
+      if (i < 0) ind.classList.remove("pronto");
+    }
+    window.addEventListener("resize", function () { var k = links.findIndex(function (a) { return a.classList.contains("ativo"); }); if (k >= 0) marcar(k); });
+    var trava = 0;
+    links.forEach(function (a, i) { a.addEventListener("click", function () { marcar(i); trava = Date.now() + 1100; }); });
+    function ver() {
+      if (Date.now() < trava) return;
+      var y = window.scrollY + 160, atual = -1;
+      alvos.forEach(function (el, i) { if (el && !el.hidden && el.offsetParent !== null && el.getBoundingClientRect().top + window.scrollY <= y) atual = i; });
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) atual = alvos.length - 1; // fim da página
+      marcar(atual);
+    }
+    window.addEventListener("scroll", ver, { passive: true }); setInterval(function () { if (Date.now() >= trava) ver(); }, 400); ver();
+  })();
+
+  montarFiltrosFixos(); montarBairros();
+  document.querySelectorAll(".alterna, .tabs").forEach(L.deslizante);
   atualizar();
 })();

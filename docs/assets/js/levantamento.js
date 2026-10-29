@@ -36,14 +36,13 @@
         esc((atual.ausentes || [])[0] || "") + "<br>" + esc(atual.semana_exibicao.rotulo) + " · ciclo " + esc(atual.id_ciclo == null ? "não informado" : atual.id_ciclo) +
         " · IDs de semana " + esc(atual.semana_inicio + "–" + atual.semana_fim) +
         (ex ? "<br>Última tentativa: " + esc(L.fmtDataHora(ex.em)) + " (" + esc(ex.resultado) + ")" : "") + "</div></div>" +
-        '<section class="secao"><div class="grid g-2"><div class="card">' + L.regua("iip", null) + '</div><div class="card">' + L.regua("ib", null) + "</div></div></section>";
+        '<section class="secao"><div class="card">' + L.regua("iip", null) + "</div></section>";
       L.destruirGrafico("gEstratos");
       return;
     }
     var idx = L.comDados.indexOf(atual), anterior = L.comDados[idx - 1] || null;
     var c = L.agregar(atual);
-    $("destaque").innerHTML = W.destaque(atual, anterior, atual.chave === L.data.home ? "Levantamento principal" : "Levantamento", "h2", true);
-    $("legendas").innerHTML = '<div class="card">' + L.regua("iip", c.iip) + '</div><div class="card">' + L.regua("ib", c.ib) + "</div>";
+    $("destaque").innerHTML = W.destaque(atual, anterior, { chip: atual.chave === L.data.home ? "Levantamento principal" : "Levantamento", tag: "h2", acoes: false });
     W.cardsEstratos($("cardsEstratos"), atual);
     W.criadouros($("listaCriadouros"), c);
     W.avisoAusentes($("avisoAusentes"), atual);
@@ -74,7 +73,7 @@
     o.layout = { padding: { top: 18 } };
     var cores = vals.map(function (v) { return L.css("--serie-1"); });
     L.criarGrafico("gEstratos", { type: "bar", data: { labels: nomes, datasets: [{ label: "IIP (%)", data: vals, backgroundColor: cores, borderRadius: 4, maxBarThickness: 64 }] },
-      options: o, plugins: [{ id: "rotulosEstrato", afterDatasetsDraw: function (ch) { var ctx = ch.ctx; ch.getDatasetMeta(0).data.forEach(function (b, i) { ctx.save(); ctx.font = "700 12px Inter, sans-serif"; ctx.fillStyle = L.css("--ink"); ctx.textAlign = "center"; ctx.fillText(L.fmtDec(vals[i], 2), b.x, b.y - 6); ctx.restore(); }); } }] });
+      options: o, plugins: [{ id: "rotulosEstrato", afterDatasetsDraw: function (ch) { var ctx = ch.ctx; ch.getDatasetMeta(0).data.forEach(function (b, i) { ctx.save(); ctx.font = "700 12px 'Plus Jakarta Sans', sans-serif"; ctx.fillStyle = L.css("--ink"); ctx.textAlign = "center"; ctx.fillText(L.fmtDec(vals[i], 2), b.x, b.y - 6); ctx.restore(); }); } }] });
   }
 
   function areas() {

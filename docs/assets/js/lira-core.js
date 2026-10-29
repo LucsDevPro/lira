@@ -115,8 +115,7 @@
     });
     h += "</div>";
     if (!opts.compacta) {
-      h += '<p class="regua-nota">' + esc(regra.nota) +
-        " <span style=\"opacity:.85\">Cálculo: " + esc(regra.formula) + ".</span></p>";
+      h += '<p class="regua-nota">' + esc(regra.nota) + " Cálculo: " + esc(regra.formula) + ".</p>";
     }
     h += "</section>";
     return h;
@@ -231,30 +230,94 @@
   var NAV = [
     { id: "home", href: "index.html", rot: "Início", svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>' },
     { id: "dashboard", href: "dashboard.html", rot: "Dashboard", svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>' },
-    { id: "levantamento", href: "levantamento.html", rot: "Levantamentos", svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>' }
+    { id: "levantamento", href: "levantamento.html", rot: "Levantamentos", svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>' },
+    { id: "resumo", href: "resumo.html", rot: "Resumo", svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10h7M8.5 13.5h4"/></svg>' }
   ];
 
   function montarChrome(paginaId) {
     var topo = document.getElementById("site-header");
     if (topo) {
       var nav = NAV.map(function (n) {
-        return '<a href="' + n.href + '"' + (n.id === paginaId ? ' aria-current="page"' : "") + ">" + n.svg + "<span>" + n.rot + "</span></a>";
+        return '<a href="' + n.href + '"' + (n.id === paginaId ? ' aria-current="page" class="sel"' : "") + ">" + n.svg + "<span>" + n.rot + "</span></a>";
+      }).join("");
+      var P = principal(), cfg = P.configurado || P.lev;
+      var itens = LEVS.slice().reverse().map(function (l, idx) {
+        var c = l.status === "com_dados" ? calc(l.total_geral) : null;
+        return '<a class="menu-item" role="menuitem" style="--i:' + idx + '" href="levantamento.html?id=' + esc(l.chave) + '"><b>' + esc(l.nome) + "</b><small>" + esc(l.semana_exibicao.rotulo) + "</small>" +
+          '<span class="estado' + (c ? "" : " sem") + '">' + (c ? "IIP " + esc(fmtPct(c.iip)) : "Sem dados") + "</span></a>";
       }).join("");
       topo.innerHTML =
-        '<div class="faixa-marca" aria-hidden="true"><span></span><span></span><span></span><span></span></div>' +
-        '<header class="site-header"><div class="container">' +
+        '<header class="site-header" id="cabecalho"><div class="container">' +
         '<a class="brand" href="index.html"><img src="assets/logo_pmpp.png" alt="Prefeitura Municipal de Ponta Porã">' +
         '<span class="brand-text"><strong>LIRAa Ponta Porã</strong><span>Setor de Endemias e Vetores</span></span></a>' +
-        '<nav class="nav-principal" aria-label="Principal">' + nav + "</nav>" +
+        '<nav class="nav-principal" aria-label="Principal"><span class="nav-ind" aria-hidden="true"></span>' + nav + "</nav>" +
+        '<div class="menu-lev"><button type="button" id="btnMenuLev" aria-haspopup="menu" aria-expanded="false" aria-controls="menuLev">' +
+        '<span class="pt' + (cfg && cfg.status === "com_dados" ? " dados" : "") + '"></span>' + esc(cfg ? cfg.nome : "Levantamentos") +
+        '<svg class="seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' +
+        '<div class="menu-painel" id="menuLev" role="menu" aria-label="Levantamentos"><h4>Abrir levantamento</h4>' + itens + "</div></div>" +
         '<button class="btn-tema" id="btnTema" type="button" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg></button>' +
-        "</div></header>";
+        "</div><div class=\"progresso\" aria-hidden=\"true\"><i></i></div></header>";
+
       document.getElementById("btnTema").addEventListener("click", function () {
         var novo = temaEfetivo() === "dark" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", novo);
         gravarTema(novo);
         document.dispatchEvent(new CustomEvent("lira:tema"));
       });
+
+      // indicador deslizante do menu
+      var navEl = topo.querySelector(".nav-principal"), ind = navEl.querySelector(".nav-ind"), links = [].slice.call(navEl.querySelectorAll("a"));
+      var ativo = navEl.querySelector("a.sel");
+      function mover(a) {
+        if (!a || !a.offsetWidth) return;
+        ind.style.width = a.offsetWidth + "px";
+        ind.style.transform = "translateX(" + a.offsetLeft + "px)";
+        ind.classList.add("pronto");
+        links.forEach(function (l) { l.classList.toggle("sel", l === a); });
+      }
+      links.forEach(function (a) {
+        a.addEventListener("mouseenter", function () { mover(a); });
+        a.addEventListener("focus", function () { mover(a); });
+      });
+      navEl.addEventListener("mouseleave", function () { mover(ativo); });
+      navEl.addEventListener("focusout", function () { mover(ativo); });
+      mover(ativo);
+      global.addEventListener("resize", function () { mover(ativo); });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { mover(ativo); });
+
+      // menu suspenso de levantamentos
+      var btn = document.getElementById("btnMenuLev"), painel = document.getElementById("menuLev");
+      function abrir(sim) {
+        painel.classList.toggle("aberto", sim);
+        btn.setAttribute("aria-expanded", String(sim));
+        if (sim) { var p = painel.querySelector(".menu-item"); if (p && document.activeElement === btn && false) p.focus(); }
+      }
+      btn.addEventListener("click", function (e) { e.stopPropagation(); abrir(!painel.classList.contains("aberto")); });
+      document.addEventListener("click", function (e) { if (!painel.contains(e.target)) abrir(false); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && painel.classList.contains("aberto")) { abrir(false); btn.focus(); }
+        if (e.key === "ArrowDown" && (document.activeElement === btn || painel.contains(document.activeElement)) && painel.classList.contains("aberto")) {
+          e.preventDefault();
+          var its = [].slice.call(painel.querySelectorAll(".menu-item")), i = its.indexOf(document.activeElement);
+          its[Math.min(its.length - 1, i + 1)].focus();
+        }
+        if (e.key === "ArrowUp" && painel.contains(document.activeElement)) {
+          e.preventDefault();
+          var its2 = [].slice.call(painel.querySelectorAll(".menu-item")), j = its2.indexOf(document.activeElement);
+          (its2[j - 1] || btn).focus();
+        }
+      });
+
+      // sombra do cabeçalho ao rolar
+      var cab = document.getElementById("cabecalho");
+      var barra = cab.querySelector(".progresso i");
+      function rolagem() {
+        cab.classList.toggle("rolou", global.scrollY > 6);
+        var total = document.documentElement.scrollHeight - global.innerHeight;
+        barra.style.transform = "scaleX(" + (total > 0 ? Math.min(1, Math.max(0, global.scrollY / total)) : 0).toFixed(4) + ")";
+      }
+      global.addEventListener("scroll", rolagem, { passive: true }); rolagem();
     }
     var rod = document.getElementById("site-footer");
     if (rod) {
@@ -263,12 +326,32 @@
     }
   }
 
+  /* ---------- pílula deslizante para controles segmentados / abas ---------- */
+  function deslizante(container) {
+    if (!container || container.classList.contains("com-thumb")) return;
+    var thumb = document.createElement("span");
+    thumb.className = "thumb"; thumb.setAttribute("aria-hidden", "true");
+    container.insertBefore(thumb, container.firstChild);
+    container.classList.add("com-thumb");
+    function mover() {
+      var b = container.querySelector('[aria-pressed="true"], [aria-selected="true"]');
+      if (!b || !b.offsetWidth) return;
+      thumb.style.width = b.offsetWidth + "px";
+      thumb.style.transform = "translateX(" + b.offsetLeft + "px)";
+    }
+    new MutationObserver(mover).observe(container, { attributes: true, subtree: true, attributeFilter: ["aria-pressed", "aria-selected"] });
+    if (global.ResizeObserver) new ResizeObserver(mover).observe(container);
+    global.addEventListener("resize", mover);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(mover);
+    mover();
+  }
+
   /* ---------- gráficos (Chart.js) ---------- */
   function css(nome) { return getComputedStyle(document.documentElement).getPropertyValue(nome).trim(); }
 
   function configurarChartJS() {
     if (!global.Chart) return;
-    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+    Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
     Chart.defaults.font.size = 12;
     Chart.defaults.maintainAspectRatio = false;
     Chart.defaults.responsive = true;
@@ -289,7 +372,7 @@
           if (y0 > y1) {
             ctx.globalAlpha = 0.10; ctx.fillStyle = cores[f.id];
             ctx.fillRect(area.left, y1, area.right - area.left, y0 - y1);
-            ctx.globalAlpha = 0.9; ctx.fillStyle = css("--muted"); ctx.font = "600 11px Inter, sans-serif"; ctx.textAlign = "right";
+            ctx.globalAlpha = 0.9; ctx.fillStyle = css("--muted"); ctx.font = "600 11px 'Plus Jakarta Sans', sans-serif"; ctx.textAlign = "right";
             ctx.fillText(f.nome_oficial + " · " + f.texto_curto, area.right - 6, y1 + 13);
           }
           ini = fim;
@@ -312,7 +395,7 @@
           if (idx < 0 || !meta.data[idx]) return;
           var p = meta.data[idx];
           ctx.save();
-          ctx.font = "700 12px Inter, sans-serif";
+          ctx.font = "700 12px 'Plus Jakarta Sans', sans-serif";
           ctx.fillStyle = css("--ink");
           ctx.textAlign = idx === 0 ? "left" : "center";
           ctx.fillText(fmtDec(ds.data[idx], 2), p.x, p.y - 12 - (i * 0));
@@ -330,7 +413,7 @@
         tooltip: {
           backgroundColor: css("--ink"), titleColor: css("--surface"), bodyColor: css("--surface"),
           padding: 10, cornerRadius: 8, boxPadding: 4,
-          titleFont: { family: "Poppins, Inter, sans-serif", weight: "600", size: 13 }
+          titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: "700", size: 13 }
         }
       },
       scales: {
@@ -389,7 +472,7 @@
     classificar: classificar, selo: selo, regua: regua, ICONES: ICONES, ICO: ICO,
     TIPOS: TIPOS, DESC_TIPOS: DESC_TIPOS, calc: calc, agregar: agregar, areasDe: areasDe, variacao: variacao, delta: delta,
     nomeBairro: nomeBairro, codigoArea: codigoArea,
-    montarChrome: montarChrome, css: css, configurarChartJS: configurarChartJS, opcoesBase: opcoesBase,
+    montarChrome: montarChrome, deslizante: deslizante, css: css, configurarChartJS: configurarChartJS, opcoesBase: opcoesBase,
     criarGrafico: criarGrafico, destruirGrafico: destruirGrafico, baixarCSV: baixarCSV, baixarExcel: baixarExcel,
     temaEfetivo: temaEfetivo
   };

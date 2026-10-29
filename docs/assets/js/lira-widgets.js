@@ -4,44 +4,44 @@
   var L = global.LIRA, esc = L.esc;
 
 
-  /* ---- bloco de destaque (Home e Detalhes) ---- */
-  function destaque(lev, anterior, chip, tag, semAcoes) {
-    tag = tag || "h2";
+  /* ---- bloco de destaque (Home e Detalhes) ----
+     opts: {chip, tag, acoes: bool}. Mostra IIP (com classificação), IB (só o valor)
+     e a legenda oficial do IIP com a faixa atual destacada. */
+  function destaque(lev, anterior, opts) {
+    opts = opts || {};
+    var tag = opts.tag || "h2";
     var c = L.agregar(lev), ca = anterior ? L.agregar(anterior) : null;
     var dIip = ca ? L.variacao(c.iip, ca.iip) : null, dIb = ca ? L.variacao(c.ib, ca.ib) : null;
-    return '<div class="card destaque">' +
+    return '<div class="card destaque"><div class="destaque-corpo">' +
       '<div class="destaque-info">' +
-      '<span class="chip">' + esc(chip) + "</span>" +
+      '<span class="eyebrow">' + esc(opts.chip || "Levantamento") + "</span>" +
       "<" + tag + ">LIRAa " + esc(lev.nome) + "</" + tag + ">" +
       '<p class="sub">' + esc(lev.semana_exibicao.rotulo) + " · ciclo " + esc(lev.id_ciclo == null ? "não informado" : lev.id_ciclo) +
       " · coletado em " + esc(L.fmtDataHora(lev.coletado_em)) + "</p>" +
       '<div class="destaque-indices">' +
-      '<div class="indice-grande"><div class="rot">IIP geral · Índice de Infestação Predial</div><div class="val">' + esc(L.fmtPct(c.iip)) + "</div>" + L.selo("iip", c.iip) + "</div>" +
-      '<div class="indice-grande"><div class="rot">IB geral · Índice de Breteau</div><div class="val">' + esc(L.fmtDec(c.ib)) + "</div>" + L.selo("ib", c.ib) + "</div>" +
+      '<div class="indice-grande"><div class="rot">IIP · Índice de Infestação Predial</div><div class="val">' + esc(L.fmtPct(c.iip)) + "</div>" + L.selo("iip", c.iip) + "</div>" +
+      '<div class="indice-grande sec"><div class="rot">IB · Índice de Breteau</div><div class="val">' + esc(L.fmtDec(c.ib)) + "</div></div>" +
       "</div></div>" +
       '<div class="destaque-lado"><dl class="mini-lista">' +
       "<dt>Imóveis pesquisados</dt><dd>" + L.fmtInt(c.pesq) + "</dd>" +
-      "<dt>Imóveis positivos (Ae. aegypti)</dt><dd>" + L.fmtInt(c.pos) + "</dd>" +
+      "<dt>Imóveis positivos</dt><dd>" + L.fmtInt(c.pos) + "</dd>" +
       "<dt>Depósitos positivos</dt><dd>" + L.fmtInt(c.dep) + "</dd>" +
       "<dt>Tubitos (focos)</dt><dd>" + L.fmtInt(c.tub) + "</dd>" +
-      '<dd class="sep"></dd><dt>Variação do IIP</dt><dd>' + (anterior ? L.delta(dIip, "p.p. vs " + anterior.nome) : "—") + "</dd>" +
-      "<dt>Variação do IB</dt><dd>" + (anterior ? L.delta(dIb, "vs " + anterior.nome) : "—") + "</dd></dl>" +
-      (semAcoes ? "" : '<div class="acoes" style="margin-top:14px"><a class="btn primario" href="levantamento.html?id=' + esc(lev.chave) + '">Ver detalhes</a>' +
-      '<a class="btn" href="dashboard.html">Dashboard</a></div>') + "</div></div>";
+      (anterior ? '<dd class="sep"></dd><dt>IIP vs ' + esc(anterior.nome) + "</dt><dd>" + L.delta(dIip, "p.p.") + "</dd>" +
+        "<dt>IB vs " + esc(anterior.nome) + "</dt><dd>" + L.delta(dIb, "") + "</dd>" : "") + "</dl>" +
+      (opts.acoes ? '<div class="acoes" style="margin-top:20px"><a class="btn primario" href="levantamento.html?id=' + esc(lev.chave) + '">Ver detalhes</a>' +
+        '<a class="btn" href="dashboard.html">Dashboard</a></div>' : "") + "</div></div>" +
+      '<div class="destaque-regua">' + L.regua("iip", c.iip) + "</div></div>";
   }
 
-  /* ---- cards por estrato ---- */
+  /* ---- cards por estrato (neutros: só os números) ---- */
   function cardsEstratos(el, lev) {
     if (!lev || !lev.estratos) { el.innerHTML = ""; return; }
     el.innerHTML = Object.keys(lev.estratos).map(function (nome) {
       var c = L.calc(lev.estratos[nome].total);
-      return '<article class="card estrato-card"><h3>' + esc(nome) + "</h3>" +
-        '<div class="par"><div><div class="v txt-' + (L.classificar("iip", c.iip) || { id: "" }).id + '">' + esc(L.fmtPct(c.iip)) + '</div><div class="l">IIP</div></div>' +
-        '<div><div class="v txt-' + (L.classificar("ib", c.ib) || { id: "" }).id + '" style="font-size:22px">' + esc(L.fmtDec(c.ib)) + '</div><div class="l">IB</div></div></div>' +
-        L.selo("iip", c.iip) +
-        '<dl class="mini-lista" style="margin-top:12px"><dt>Imóveis pesquisados</dt><dd>' + L.fmtInt(c.pesq) + "</dd>" +
-        "<dt>Imóveis positivos</dt><dd>" + L.fmtInt(c.pos) + "</dd>" +
-        "<dt>Depósitos positivos</dt><dd>" + L.fmtInt(c.dep) + "</dd></dl></article>";
+      return '<article class="card estrato-card"><h3>' + esc(nome) + '</h3><div class="v">' + esc(L.fmtPct(c.iip)) + '</div>' +
+        '<div class="l">IIP · IB ' + esc(L.fmtDec(c.ib)) + "</div>" +
+        '<div class="l" style="margin-top:10px">' + L.fmtInt(c.pos) + " de " + L.fmtInt(c.pesq) + " imóveis positivos</div></article>";
     }).join("");
   }
 
@@ -73,8 +73,8 @@
       var d = it.ant && it.ant.iip != null && it.c.iip != null ? L.variacao(it.c.iip, it.ant.iip) : null;
       return '<li class="rank-item' + (opts.destaque && opts.destaque === it.a.codigo ? " destaque" : "") + '"><span class="rank-pos">' + (i + 1) + "</span>" +
         '<div class="rank-nome">' + esc(it.a.nome) + "<small>" + esc(it.a.estrato) + " · cód. " + esc(it.a.codigo) + "</small></div>" +
-        '<div class="rank-barra" role="img" aria-label="IIP ' + esc(L.fmtPct(it.c.iip)) + '"><i class="' + (cl ? cl.id : "") + '" style="width:' + Math.max(0, ((it.c.iip || 0) / max) * 100).toFixed(1) + '%"></i></div>' +
-        '<div class="rank-valor"><span class="l1"><b>' + esc(L.fmtPct(it.c.iip)) + "</b>" + L.selo("iip", it.c.iip) + "</span>" +
+        '<div class="rank-barra" role="img" aria-label="IIP ' + esc(L.fmtPct(it.c.iip)) + '"><i class="' + (opts.limpo ? "" : (cl ? cl.id : "")) + '" style="width:' + Math.max(0, ((it.c.iip || 0) / max) * 100).toFixed(1) + '%"></i></div>' +
+        '<div class="rank-valor"><span class="l1"><b>' + esc(L.fmtPct(it.c.iip)) + "</b>" + (opts.limpo ? "" : L.selo("iip", it.c.iip)) + "</span>" +
         "<small>" + L.fmtInt(it.c.pos) + " de " + L.fmtInt(it.c.pesq) + " imóveis" + (d ? " · " + L.delta(d, "p.p.") : "") + "</small></div></li>";
     }).join("") + "</ol>";
     return total;
@@ -131,10 +131,11 @@
       }
     };
     base.interaction = { mode: "index", intersect: false };
-    base.scales.y.title = { display: true, text: "por 100 imóveis pesquisados", color: L.css("--muted") };
+    base.scales.y.title = { display: true, text: opts.soIip ? "% de imóveis positivos" : "por 100 imóveis pesquisados", color: L.css("--muted") };
     base.scales.y.suggestedMax = 4.5;
     base.layout = { padding: { top: 16, right: 18 } };
-    return L.criarGrafico(canvasId, { type: "line", data: { labels: labels, datasets: [ds("IIP (%)", iip, s1), ds("IB", ib, s2, true)] }, options: base });
+    var conjuntos = opts.soIip ? [ds("IIP (%)", iip, s1)] : [ds("IIP (%)", iip, s1), ds("IB", ib, s2, true)];
+    return L.criarGrafico(canvasId, { type: "line", data: { labels: labels, datasets: conjuntos }, options: base });
   }
 
   global.LIRA_W = { destaque: destaque, cardsEstratos: cardsEstratos, ranking: ranking, criadouros: criadouros, avisoAusentes: avisoAusentes, graficoEvolucao: graficoEvolucao };

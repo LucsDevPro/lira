@@ -4,11 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LIRAa — Prefeitura Municipal de Ponta Porã</title>
-<meta name="description" content="Levantamento Rápido de Índices para Aedes aegypti (LIRAa) de Ponta Porã: índices IIP e IB, classificação de risco e histórico.">
+<meta name="description" content="Levantamento Rápido de Índices para Aedes aegypti (LIRAa) de Ponta Porã: IIP, IB, classificação de risco e histórico.">
 <link rel="icon" href="assets/logo_pmpp.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/lira.css">
 </head>
 <body>
@@ -16,35 +13,21 @@
 
 <main class="container" id="conteudo">
   <div id="avisoFallback"></div>
-
   <section id="destaque" aria-live="polite"></section>
 
   <section class="secao">
-    <div class="secao-titulo">
-      <h2>Como o risco é classificado</h2>
-      <p>Faixas oficiais do IIP e referência do IB — o resultado atual aparece destacado.</p>
-    </div>
-    <div class="grid g-2" id="legendas"></div>
-  </section>
-
-  <section class="secao">
-    <div class="secao-titulo"><h2>Resultado por estrato</h2><p id="subEstratos"></p></div>
-    <div class="grid g-4" id="cardsEstratos"></div>
-  </section>
-
-  <section class="secao">
-    <div class="secao-titulo">
-      <h2>Evolução dos últimos levantamentos</h2>
-      <a class="link-mais" href="dashboard.html">Abrir dashboard completo →</a>
-    </div>
+    <div class="secao-titulo"><h2>Evolução do IIP</h2><a class="link-mais" style="margin:0" href="dashboard.html">Abrir o dashboard completo</a></div>
     <div class="grid g-3">
       <div class="card span-2">
-        <div class="legenda-chart"><span><i class="linha" style="background:var(--serie-1)"></i>IIP (%)</span><span><i class="linha" style="background:var(--serie-2)"></i>IB (por 100 imóveis)</span></div>
-        <div class="chart-wrap"><canvas id="gEvolucao" role="img" aria-label="Evolução do IIP e do IB nos levantamentos"></canvas></div>
-        <p class="card-sub" style="margin:8px 0 0">IIP e IB coincidem quando cada imóvel positivo tem um único depósito positivo.</p>
+        <div class="chart-wrap"><canvas id="gEvolucao" role="img" aria-label="Evolução do IIP nos levantamentos"></canvas></div>
       </div>
       <div class="card" id="boxVariacao"></div>
     </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo"><h2>Por estrato</h2><p id="subEstratos"></p></div>
+    <div class="grid g-4" id="cardsEstratos"></div>
   </section>
 
   <section class="secao">
@@ -53,20 +36,20 @@
         <h3 class="card-titulo">Bairros com maior IIP</h3>
         <p class="card-sub" id="subRanking"></p>
         <div id="ranking"></div>
-        <a class="link-mais" href="dashboard.html#ranking">Ver ranking completo →</a>
+        <a class="link-mais" href="dashboard.html#ranking">Ver ranking completo</a>
       </div>
       <div class="card">
         <h3 class="card-titulo">Principais criadouros</h3>
         <p class="card-sub">Tipos de depósito com Aedes aegypti, do mais ao menos frequente.</p>
         <div id="criadouros"></div>
-        <a class="link-mais" href="dashboard.html#criadouros">Ver histórico por tipo →</a>
+        <a class="link-mais" href="dashboard.html#criadouros">Ver histórico por tipo</a>
       </div>
     </div>
   </section>
 
   <section class="secao">
-    <div class="secao-titulo"><h2>Todos os levantamentos</h2><p>Selecione um para ver os detalhes por estrato e bairro.</p></div>
-    <div class="grid g-4" id="listaLev"></div>
+    <div class="secao-titulo"><h2>Levantamentos</h2><p>Abra um para ver o detalhe por estrato e bairro.</p></div>
+    <div class="card flush"><div class="lista-lev" id="listaLev"></div></div>
   </section>
 
   <div id="avisoAusentes" class="secao"></div>

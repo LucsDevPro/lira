@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resumo para compartilhar — LIRAa Ponta Porã</title>
+<meta name="description" content="Resumo do LIRAa em linguagem simples, pronto para compartilhar no WhatsApp, com imagem para o Status.">
+<link rel="icon" href="assets/logo_pmpp.png">
+<link rel="stylesheet" href="assets/css/lira.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main class="container" id="conteudo">
+  <div class="page-head">
+    <div>
+      <h1>Resumo para compartilhar</h1>
+      <p>O resultado do LIRAa em linguagem simples, pronto para enviar no WhatsApp e postar no Status.</p>
+    </div>
+    <div class="acoes">
+      <button class="btn" id="btnAnt" type="button" aria-label="Levantamento anterior">←</button>
+      <div class="campo" style="min-width:260px"><label class="sr-only" for="selLev">Levantamento</label><select id="selLev"></select></div>
+      <button class="btn" id="btnProx" type="button" aria-label="Próximo levantamento">→</button>
+    </div>
+  </div>
+
+  <div id="semDados" hidden></div>
+
+  <div id="conteudoRes" class="grid g-2 resumo-grade">
+    <section class="card">
+      <h2 class="card-titulo">Mensagem de texto</h2>
+      <p class="card-sub">Confira e edite se quiser antes de enviar.</p>
+      <div class="zap-previa" id="previa" aria-label="Pré-visualização da mensagem"></div>
+      <details class="editar"><summary>Editar o texto antes de enviar</summary>
+      <label class="sr-only" for="textoZap">Texto da mensagem</label>
+      <textarea id="textoZap" class="zap-texto" rows="12"></textarea></details>
+      <div class="acoes" style="margin-top:14px">
+        <a class="btn primario" id="btnZap" target="_blank" rel="noopener">Enviar no WhatsApp</a>
+        <button class="btn" id="btnCopiar" type="button">Copiar texto</button>
+        <span class="feedback" id="fbTexto" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-titulo">Imagem para o Status</h2>
+      <p class="card-sub">Formato vertical 1080 × 1920, ideal para Status do WhatsApp e Instagram.</p>
+      <div class="img-moldura"><canvas id="cvImagem" role="img" aria-label="Imagem do resumo do LIRAa"></canvas></div>
+      <div class="acoes" style="margin-top:14px">
+        <button class="btn primario" id="btnBaixar" type="button">Baixar imagem (PNG)</button>
+        <button class="btn" id="btnCompartilhar" type="button" hidden>Compartilhar imagem</button>
+        <span class="feedback" id="fbImg" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/data/lira-data.js"></script>
+<script src="assets/js/lira-core.js"></script>
+<script src="assets/js/logo-data.js"></script>
+<script src="assets/js/lira-resumo.js"></script>
+<script src="assets/js/resumo.js"></script>
+</body>
+</html>

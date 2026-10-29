@@ -8,9 +8,10 @@ de comparação** e **Detalhes dos levantamentos**.
 
 | Página | Arquivo | O que mostra |
 |---|---|---|
-| Início | `docs/index.html` | Levantamento principal (**Novembro/2026**), IIP e IB com classificação, legenda oficial, estratos, evolução, ranking e criadouros |
-| Dashboard | `docs/dashboard.html` | Filtros (levantamento, comparação, ciclo, período, estrato, bairro), evolução do IIP e IB, variação entre ciclos, comparação por estrato, imóveis pesquisados/positivos, ranking de bairros, principais criadouros e tabela histórica completa (por levantamento e por bairro, com CSV) |
-| Levantamentos | `docs/levantamento.html?id=318-319` | Detalhes de um levantamento: consolidado por estrato, detalhamento por área, gráficos, Excel e impressão |
+| Início | `docs/index.html` | Levantamento principal (**Novembro/2026**): IIP com classificação e legenda oficial do IIP, IB (só o valor), evolução, estratos, ranking e criadouros |
+| Dashboard | `docs/dashboard.html` | Menu de seções e filtros (levantamento, comparação, estrato, bairro, período), evolução do IIP e IB, variação entre ciclos, comparação por estrato, imóveis pesquisados/positivos, ranking de bairros, principais criadouros e tabela histórica completa (por levantamento e por bairro, com CSV) |
+| Levantamentos | `docs/levantamento.html?id=318-319` | Detalhes de um levantamento (legenda do IIP): consolidado por estrato, detalhamento por área, gráficos, Excel e impressão |
+| Resumo | `docs/resumo.html?id=318-319` | Uma aba por LIRAa: texto em linguagem simples (resultado, bairros com mais focos, depósito predominante e dica) com botões *Enviar no WhatsApp* e *Copiar texto*, e imagem vertical 1080×1920 (PNG) para o Status. Gerado só com os dados reais; levantamentos sem dados mostram aviso |
 
 Enquanto o levantamento principal ainda não tem dados coletados, a Home avisa
 isso e mostra o **último levantamento com dados**, claramente identificado.
@@ -27,7 +28,7 @@ Todas as regras ficam em **`regras_classificacao.json`** (lido por
 * **IB** — usa as **mesmas faixas do IIP**, conforme definido pelo Setor de
   Endemias (o Ministério da Saúde publica faixas oficiais só para o IIP; para o
   IB define apenas o cálculo: depósitos positivos ÷ imóveis pesquisados × 100).
-  A legenda do IB indica "mesmas faixas do IIP · critério do setor". Para mudar,
+  A legenda do IB aparece apenas no Dashboard e indica "mesmas faixas do IIP · critério do setor". Para mudar,
   edite a seção `ib` do JSON e rode `python generate_dashboard.py`.
 
 ## Levantamentos e automação
@@ -117,7 +118,9 @@ continuam funcionando como antes.
 ## Identidade visual e segurança
 
 Marca da Prefeitura Municipal de Ponta Porã (`docs/assets/logo_pmpp.png` —
-mantenha o arquivo), paleta `#002B68`, `#007ECA`, `#00B93B`, `#FFB900`, fontes
-Poppins/Inter, tema claro/escuro. Chart.js e SheetJS ficam em
-`docs/assets/vendor/` (sem depender de CDN). Se a senha `SENHA = "350970"` do
+mantenha o arquivo). Visual neutro, com azul-marinho `#002B68` nas ações e cor só
+na classificação de risco; fonte Plus Jakarta Sans (licença OFL, em
+`docs/assets/fonts/`), menu com indicador deslizante e seletor de levantamentos,
+tema claro/escuro. Chart.js e SheetJS ficam em `docs/assets/vendor/` (sem
+depender de CDN). Se a senha `SENHA = "350970"` do
 script original chegou a ser commitada em algum momento, troque-a no eVisita.

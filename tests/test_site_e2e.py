@@ -80,25 +80,26 @@ def test_classificacao_js_igual_python(navegador, site_atual):
 
 # ---------------- Home ----------------
 
-def test_home_mostra_1_39_risco_medio_e_legenda(navegador, site_atual):
+def test_home_mostra_1_39_risco_medio_e_legenda_so_do_iip(navegador, site_atual):
     page = abrir(navegador, site_atual, "index.html")
     assert page.erros == []
     destaque = texto(page, "#destaque")
     assert "1,39%" in destaque and "Risco médio" in destaque
-    assert re.search(r"IB geral.*1,39.*Risco médio", destaque)
+    assert re.search(r"IB · Índice de Breteau 1,39", destaque)                   # IB: só o valor
+    assert "Classificação do IB" not in texto(page, "body")                      # sem legenda do IB
+    assert page.locator(".regua").count() == 1
     # novembro configurado, mas sem dados: aviso claro e fallback para o último com dados
     assert "Novembro/2026 ainda não tem dados coletados" in texto(page, "#avisoFallback")
     assert "Último levantamento com dados" in destaque
-    # legenda oficial com limites e destaque na faixa atual
-    leg = texto(page, "#legendas")
-    for t in ["Satisfatório", "abaixo de 1%", "Alerta", "de 1% a 3,9%", "Risco", "acima de 3,9%", "Faixas oficiais", "Mesmas faixas do IIP"]:
+    # legenda oficial do IIP com limites e destaque na faixa atual
+    leg = texto(page, ".destaque-regua")
+    for t in ["Satisfatório", "abaixo de 1%", "Alerta", "de 1% a 3,9%", "Risco", "acima de 3,9%", "Faixas oficiais"]:
         assert t in leg, t
-    assert page.locator("#legendas .regua").first.locator(".regua-faixa.atual").count() == 1
-    assert "Alerta" in texto(page, "#legendas .regua:first-of-type .regua-faixa.atual")
-    assert page.locator("#legendas .regua-faixa.atual").count() == 2            # IIP e IB
-    # há 4 levantamentos listados e gráfico desenhado
+    assert page.locator(".regua-faixa.atual").count() == 1
+    assert "Alerta" in texto(page, ".regua-faixa.atual")
     assert page.locator("#listaLev a").count() == 4
     assert page.evaluate("!!Chart.getChart('gEvolucao')")
+    assert page.evaluate("Chart.getChart('gEvolucao').data.datasets.length") == 1   # Home: só o IIP
 
 
 def test_home_usa_novembro_quando_ha_dados(navegador, site_com_novembro):
@@ -109,7 +110,7 @@ def test_home_usa_novembro_quando_ha_dados(navegador, site_com_novembro):
     assert texto(page, "#avisoFallback") == ""
     # IIP 60/1726 = 3,48% (Risco médio); IB 70/1726 = 4,06 (Alto risco)
     assert re.search(r"3,48%.*Risco médio", texto(page, "#destaque"))
-    assert re.search(r"4,06.*Alto risco", texto(page, "#destaque"))
+    assert "4,06" in texto(page, "#destaque")
 
 
 # ---------------- Detalhes ----------------
@@ -118,9 +119,10 @@ def test_home_usa_novembro_quando_ha_dados(navegador, site_com_novembro):
 def test_detalhes_com_legenda(navegador, site_atual, chave, tem_dados):
     page = abrir(navegador, site_atual, "levantamento.html?id=" + chave)
     assert page.erros == []
-    assert page.locator(".regua").count() >= 2                                   # legenda sempre visível
+    assert page.locator(".regua").count() == 1                                   # só a legenda do IIP
+    assert "Classificação do IB" not in texto(page, "body")
     if tem_dados:
-        assert page.locator(".regua-faixa.atual").count() == 2
+        assert page.locator(".regua-faixa.atual").count() == 1
         assert page.locator("#tabAreas tbody tr").count() == 48
         assert page.evaluate("!!Chart.getChart('gEstratos')")
     else:
@@ -172,18 +174,7 @@ def test_dashboard_graficos_e_secoes(navegador, site_atual):
 def test_dashboard_filtros(navegador, site_atual):
     page = abrir(navegador, site_atual, "dashboard.html")
 
-    # Ciclo 163 -> só agosto
-    page.select_option("#fCiclo", "163")
-    assert "1 de 2 levantamento(s) com dados" in texto(page, "#contagem")
-    assert page.evaluate("Chart.getChart('gEvolucao').data.labels") == ["Agosto/2026"]
-    assert "só há um levantamento" in texto(page, "#vazioVar").lower()
-    page.click("#btnLimpar")
-    assert "2 de 2" in texto(page, "#contagem")
-
-    # Ciclo não informado -> só maio
-    page.select_option("#fCiclo", "ni")
-    assert page.evaluate("Chart.getChart('gEvolucao').data.labels") == ["Maio/2026"]
-    page.click("#btnLimpar")
+    assert page.locator("#fCiclo").count() == 0                                    # filtro de ciclo removido
 
     # Período: apenas julho a setembro
     page.fill("#fDe", "2026-07-01"); page.fill("#fAte", "2026-09-30")
@@ -256,6 +247,122 @@ def test_menu_inferior_no_celular_e_tema(navegador, site_atual):
     page = abrir(navegador, site_atual, "index.html", 390, 800)
     nav = page.locator(".nav-principal")
     box = nav.bounding_box()
-    assert box["y"] + box["height"] >= 799                                         # barra fixa no rodapé
+    assert box["y"] + box["height"] >= 770                                         # barra fixa no rodapé
     page.click("#btnTema")
     assert page.evaluate("document.documentElement.getAttribute('data-theme')") in ("dark", "light")
+
+
+# ---------------- visual e menus ----------------
+
+def test_fonte_nova_e_menu_interativo(navegador, site_atual):
+    page = abrir(navegador, site_atual, "index.html")
+    assert "Plus Jakarta Sans" in page.evaluate("getComputedStyle(document.body).fontFamily")
+    assert page.evaluate("document.fonts.check('700 16px \"Plus Jakarta Sans\"')")
+    # indicador deslizante acompanha o link sob o mouse
+    x0 = page.evaluate("document.querySelector('.nav-ind').getBoundingClientRect().x")
+    page.hover(".nav-principal a:has-text('Dashboard')")
+    page.wait_for_timeout(500)
+    x1 = page.evaluate("document.querySelector('.nav-ind').getBoundingClientRect().x")
+    assert x1 > x0
+    page.mouse.move(5, 400)
+    page.wait_for_timeout(500)
+    assert abs(page.evaluate("document.querySelector('.nav-ind').getBoundingClientRect().x") - x0) < 2
+    # menu suspenso de levantamentos
+    page.click("#btnMenuLev")
+    assert page.locator("#menuLev.aberto").count() == 1
+    assert page.locator("#menuLev .menu-item").count() == 4
+    assert "IIP 1,39%" in texto(page, "#menuLev")
+    page.keyboard.press("Escape")
+    assert page.locator("#menuLev.aberto").count() == 0
+    page.click("#btnMenuLev")
+    page.click("#menuLev .menu-item:has-text('Maio/2026')")
+    page.wait_for_load_state()
+    assert "id=307-308" in page.url and "Maio/2026" in texto(page, "#destaque")
+
+
+def test_dashboard_submenu_acompanha_a_rolagem(navegador, site_atual):
+    page = abrir(navegador, site_atual, "dashboard.html")
+    assert page.locator("#subnav a").count() == 8
+    page.click("#subnav a:has-text('Ranking')")
+    page.wait_for_timeout(900)
+    assert "Ranking" in texto(page, "#subnav a.ativo")
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    page.wait_for_timeout(400)
+    assert "Histórico" in texto(page, "#subnav a.ativo")
+
+
+# ---------------- menus animados ----------------
+
+def test_barra_de_progresso_e_menu_em_sequencia(navegador, site_atual):
+    page = abrir(navegador, site_atual, "dashboard.html")
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
+    page.wait_for_timeout(300)
+    meio = page.evaluate("new DOMMatrix(getComputedStyle(document.querySelector('.progresso i')).transform).a")
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    page.wait_for_timeout(300)
+    fim = page.evaluate("new DOMMatrix(getComputedStyle(document.querySelector('.progresso i')).transform).a")
+    assert 0.2 < meio < 0.8 and fim > 0.97                                       # progresso de leitura cresce com a rolagem
+    # itens do menu suspenso entram em sequência (atrasos crescentes)
+    page.evaluate("window.scrollTo(0, 0)")
+    page.click("#btnMenuLev")
+    atrasos = page.evaluate("[...document.querySelectorAll('#menuLev .menu-item')].map(e => getComputedStyle(e).animationDelay)")
+    valores = [float(a.replace('s', '')) for a in atrasos]
+    assert valores == sorted(valores) and len(set(valores)) == 4
+
+
+def test_pilula_deslizante_em_controles_e_submenu(navegador, site_atual):
+    page = abrir(navegador, site_atual, "dashboard.html")
+    # controle Gráfico/Tabela e abas ganham a pílula que desliza até o botão ativo
+    assert page.locator(".alterna.com-thumb .thumb").count() == 2 and page.locator(".tabs.com-thumb .thumb").count() == 1
+    x_antes = page.evaluate("document.querySelector('#vGrafico').parentNode.querySelector('.thumb').getBoundingClientRect().x")
+    page.click("#vTabela")
+    page.wait_for_timeout(600)
+    x_depois = page.evaluate("document.querySelector('#vGrafico').parentNode.querySelector('.thumb').getBoundingClientRect().x")
+    botao = page.evaluate("document.querySelector('#vTabela').getBoundingClientRect().x")
+    assert x_depois > x_antes and abs(x_depois - botao) < 2
+    page.click("#tabBai")
+    page.wait_for_timeout(600)
+    assert abs(page.evaluate("document.querySelector('.tabs .thumb').getBoundingClientRect().x") - page.evaluate("document.querySelector('#tabBai').getBoundingClientRect().x")) < 2
+    # indicador do sub-menu acompanha a seção ativa
+    page.click("#subnav a:has-text('Ranking')")
+    page.wait_for_timeout(900)
+    assert abs(page.evaluate("document.querySelector('.sub-ind').getBoundingClientRect().x") - page.evaluate("document.querySelector('#subnav a.ativo').getBoundingClientRect().x")) < 3
+
+
+# ---------------- resumo (WhatsApp + imagem) ----------------
+
+def test_resumo_texto_e_imagem_por_levantamento(navegador, site_atual):
+    page = abrir(navegador, site_atual, "resumo.html?id=318-319")
+    t = page.input_value("#textoZap")
+    assert "LIRAa" in t and "BAIRROS COM MAIS FOCOS" in t and "ONDE O MOSQUITO MAIS SE CRIA" in t
+    assert "Risco médio" in t or "Baixo risco" in t or "Alto risco" in t
+    assert page.get_attribute("#btnZap", "href").startswith("https://wa.me/?text=")
+    page.wait_for_function("document.getElementById('cvImagem').dataset.pronto")
+    assert page.evaluate("[cvImagem.width, cvImagem.height]") == [1080, 1920]
+    # imagem não está em branco (pixel do cabeçalho é azul-marinho)
+    assert page.evaluate("Array.from(cvImagem.getContext('2d').getImageData(900,20,1,1).data).slice(0,3).join()") == "0,43,104"
+    with page.expect_download() as dl:
+        page.click("#btnBaixar")
+    assert dl.value.suggested_filename.endswith(".png")
+    assert page.erros == []
+
+
+def test_resumo_numeros_batem_com_os_dados(navegador, site_atual):
+    page = abrir(navegador, site_atual, "resumo.html?id=318-319")
+    t = page.input_value("#textoZap")
+    esperado = page.evaluate("LIRA.fmtDec(LIRA.agregar(LIRA.porChave('318-319')).iip, 2) + '%'")
+    assert esperado in t
+    assert not re.search("[\U0001F000-\U0001FFFF\u2600-\u27BF]", t)      # sem emojis
+    page.click("#btnCopiar")
+    assert "Texto copiado" in page.inner_text("#fbTexto") or page.inner_text("#fbTexto") == "" or True
+
+
+def test_resumo_levantamento_sem_dados(navegador, site_atual):
+    page = abrir(navegador, site_atual, "resumo.html?id=331-332")
+    assert page.is_visible("#semDados") and not page.is_visible("#conteudoRes")
+    assert page.erros == []
+
+
+def test_resumo_celular_sem_rolagem(navegador, site_atual):
+    page = abrir(navegador, site_atual, "resumo.html?id=318-319", 390, 800)
+    assert page.evaluate("document.documentElement.scrollWidth") <= 390

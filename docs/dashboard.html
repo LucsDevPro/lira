@@ -6,9 +6,6 @@
 <title>Dashboard — Comparação dos LIRAa · Ponta Porã</title>
 <meta name="description" content="Histórico e comparação dos LIRAa de Ponta Porã: evolução do IIP e do IB, variação entre ciclos, ranking de bairros e principais criadouros.">
 <link rel="icon" href="assets/logo_pmpp.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/lira.css">
 </head>
 <body>
@@ -31,7 +28,6 @@
     <div class="filtros-grade">
       <div class="campo"><label for="fFoco">Levantamento</label><select id="fFoco"></select></div>
       <div class="campo"><label for="fComp">Comparar com</label><select id="fComp"></select></div>
-      <div class="campo"><label for="fCiclo">Ciclo (eVisita)</label><select id="fCiclo"></select></div>
       <div class="campo"><label for="fEstrato">Estrato</label><select id="fEstrato"></select></div>
       <div class="campo"><label for="fBairro">Bairro</label><select id="fBairro"></select></div>
       <div class="campo"><label for="fDe">Período: de</label><input type="date" id="fDe"></div>
@@ -44,22 +40,28 @@
     </div>
   </section>
 
+  <nav class="subnav" aria-label="Seções do dashboard" id="subnav">
+    <div class="subnav-lista">
+      <a href="#sResumo">Resumo</a><a href="#sClass">Classificação</a><a href="#sEvol">Evolução</a><a href="#sComp">Comparação</a><a href="#sImoveis">Imóveis</a><a href="#ranking">Ranking</a><a href="#criadouros">Criadouros</a><a href="#historico">Histórico</a>
+    </div>
+  </nav>
+
   <div id="semResultado" hidden class="secao">
     <div class="card"><div class="vazio"><strong>Nenhum levantamento com dados neste filtro</strong>Amplie o período ou limpe os filtros.</div></div>
   </div>
 
   <div id="painel">
-    <section class="secao" aria-labelledby="tResumo">
+    <section class="secao" id="sResumo" aria-labelledby="tResumo">
       <div class="secao-titulo"><h2 id="tResumo">Resumo do levantamento</h2><p id="subResumo"></p></div>
       <div class="grid g-kpi" id="kpis"></div>
     </section>
 
-    <section class="secao" aria-labelledby="tClass">
+    <section class="secao" id="sClass" aria-labelledby="tClass">
       <div class="secao-titulo"><h2 id="tClass">Classificação de risco</h2><p id="subClass"></p></div>
       <div class="grid g-2" id="legendas"></div>
     </section>
 
-    <section class="secao" aria-labelledby="tEvol">
+    <section class="secao" id="sEvol" aria-labelledby="tEvol">
       <div class="secao-titulo"><h2 id="tEvol">Evolução do IIP e do IB</h2><p>Todos os levantamentos do filtro, com as faixas de risco do IIP ao fundo.</p></div>
       <div class="card">
         <div class="chart-head">
@@ -72,7 +74,7 @@
       </div>
     </section>
 
-    <section class="secao" aria-labelledby="tVar">
+    <section class="secao" id="sComp" aria-labelledby="tVar">
       <div class="secao-titulo"><h2 id="tVar">Variação e comparação entre ciclos</h2><p id="subComp"></p></div>
       <div class="grid g-2">
         <div class="card">
@@ -94,7 +96,7 @@
       </div>
     </section>
 
-    <section class="secao" aria-labelledby="tImo">
+    <section class="secao" id="sImoveis" aria-labelledby="tImo">
       <div class="secao-titulo"><h2 id="tImo">Imóveis pesquisados e positivos</h2><p>Por levantamento, no recorte filtrado.</p></div>
       <div class="grid g-2">
         <div class="card"><h3 class="card-titulo">Imóveis pesquisados</h3><div class="chart-wrap baixo"><canvas id="gPesq" role="img" aria-label="Imóveis pesquisados por levantamento"></canvas></div></div>
