@@ -25,7 +25,7 @@
   document.getElementById("subEstratos").textContent = lev.nome + " · " + lev.semana_exibicao.rotulo;
   W.cardsEstratos(document.getElementById("cardsEstratos"), lev);
   W.criadouros(document.getElementById("criadouros"), c);
-  document.getElementById("subRanking").textContent = lev.nome + ". Cada bairro tem poucos imóveis: leia junto de “positivos de pesquisados”.";
+  document.getElementById("subRanking").textContent = lev.nome + ". Cada bairro tem poucos imóveis: veja também quantos foram pesquisados.";
   W.ranking(document.getElementById("ranking"), lev, { limite: 7, comparado: anterior, limpo: true });
   W.avisoAusentes(document.getElementById("avisoAusentes"), lev);
 
@@ -47,7 +47,7 @@
   document.getElementById("listaLev").innerHTML = L.levantamentos.slice().reverse().map(function (l) {
     var x = L.agregar(l);
     return '<a class="lev-linha" href="levantamento.html?id=' + esc(l.chave) + '"><div><b>' + esc(l.nome) + "</b><small>" + esc(l.semana_exibicao.rotulo) + (l.chave === L.data.home ? " · principal" : "") + "</small></div>" +
-      '<div class="meio"><small>' + (x ? L.fmtInt(x.pos) + " de " + L.fmtInt(x.pesq) + " imóveis positivos" : esc((l.ausentes || [])[0] || "Sem dados")) + "</small></div>" +
+      '<div class="meio"><small>' + (x ? L.fmtInt(x.pos) + " positivos em " + L.fmtInt(x.pesq) + " pesquisados" : esc((l.ausentes || [])[0] || "Sem dados")) + "</small></div>" +
       '<div class="iip">' + (x ? esc(L.fmtPct(x.iip)) : '<span class="selo neutro mini">Sem dados</span>') + "</div>" +
       '<svg class="ir" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>';
   }).join("");

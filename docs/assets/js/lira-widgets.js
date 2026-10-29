@@ -41,7 +41,7 @@
       var c = L.calc(lev.estratos[nome].total);
       return '<article class="card estrato-card"><h3>' + esc(nome) + '</h3><div class="v">' + esc(L.fmtPct(c.iip)) + '</div>' +
         '<div class="l">IIP · IB ' + esc(L.fmtDec(c.ib)) + "</div>" +
-        '<div class="l" style="margin-top:10px">' + L.fmtInt(c.pos) + " de " + L.fmtInt(c.pesq) + " imóveis positivos</div></article>";
+        '<div class="l" style="margin-top:10px">' + L.fmtInt(c.pos) + " positivos em " + L.fmtInt(c.pesq) + " pesquisados</div></article>";
     }).join("");
   }
 
@@ -75,7 +75,7 @@
         '<div class="rank-nome">' + esc(it.a.nome) + "<small>" + esc(it.a.estrato) + " · cód. " + esc(it.a.codigo) + "</small></div>" +
         '<div class="rank-barra" role="img" aria-label="IIP ' + esc(L.fmtPct(it.c.iip)) + '"><i class="' + (opts.limpo ? "" : (cl ? cl.id : "")) + '" style="width:' + Math.max(0, ((it.c.iip || 0) / max) * 100).toFixed(1) + '%"></i></div>' +
         '<div class="rank-valor"><span class="l1"><b>' + esc(L.fmtPct(it.c.iip)) + "</b>" + (opts.limpo ? "" : L.selo("iip", it.c.iip)) + "</span>" +
-        "<small>" + L.fmtInt(it.c.pos) + " de " + L.fmtInt(it.c.pesq) + " imóveis" + (d ? " · " + L.delta(d, "p.p.") : "") + "</small></div></li>";
+        "<small>" + L.fmtInt(it.c.pos) + " positivos em " + L.fmtInt(it.c.pesq) + " pesquisados" + (d ? " · " + L.delta(d, "p.p.") : "") + "</small></div></li>";
     }).join("") + "</ol>";
     return total;
   }

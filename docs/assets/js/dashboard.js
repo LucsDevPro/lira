@@ -335,7 +335,7 @@
         return { cd: cd, b: BAIRROS[cd], vals: vals, d: d };
       });
       var fixa = { __cls: "total", cd: "", b: { nome: "Município (total geral)", estrato: "" }, tot: vis.map(function (l) { return L.calc(l.total_geral); }), d: foco && comp ? L.variacao(L.calc(foco.total_geral).iip, L.calc(comp.total_geral).iip) : null };
-      function celula(c) { return c ? '<span class="celula-bairro"><span class="selo mini ' + L.classificar("iip", c.iip).id + '" title="' + esc(L.classificar("iip", c.iip).rotulo) + '">' + L.ICONES[L.classificar("iip", c.iip).id] + esc(L.fmtPct(c.iip)) + "</span><small>" + c.pos + " de " + c.pesq + "</small></span>" : "—"; }
+      function celula(c) { return c ? '<span class="celula-bairro"><span class="selo mini ' + L.classificar("iip", c.iip).id + '" title="' + esc(L.classificar("iip", c.iip).rotulo) + '">' + L.ICONES[L.classificar("iip", c.iip).id] + esc(L.fmtPct(c.iip)) + "</span><small>" + c.pos + " em " + c.pesq + "</small></span>" : "—"; }
       var colsB = [
         { t: "Bairro", esq: true, v: function (r) { return r.b.nome; }, h: function (r) { return "<b>" + esc(r.b.nome) + "</b>" + (r.cd ? ' <small style="color:var(--muted)">cód. ' + esc(r.cd) + "</small>" : ""); }, tx: function (r) { return r.b.nome + (r.cd ? " (" + r.cd + ")" : ""); } },
         { t: "Estrato", esq: true, v: function (r) { return r.b.estrato; }, h: function (r) { return esc(r.b.estrato); }, tx: function (r) { return r.b.estrato; } }
@@ -345,7 +345,7 @@
       });
       colsB.push({ t: foco && comp ? "Δ " + esc(foco.nome.split("/")[0]) + " vs " + esc(comp.nome.split("/")[0]) : "Δ", v: function (r) { return r.d ? r.d.abs : null; }, h: function (r) { return r.d ? L.delta(r.d, "p.p.", 2) : "—"; }, tx: function (r) { return r.d ? L.fmtSinal(r.d.abs, 2) : ""; } });
       tabela($("tabHist"), colsB, linhasB, "bai", [fixa]);
-      $("notaHist").textContent = "Cada célula mostra o IIP do bairro e “positivos de pesquisados”. Bairros têm poucos imóveis por levantamento: variações grandes podem refletir amostra pequena. A variação compara o levantamento e a comparação escolhidos nos filtros.";
+      $("notaHist").textContent = "Cada célula mostra o IIP do bairro e “positivos em pesquisados” (ex.: 4 em 34). Bairros têm poucos imóveis por levantamento: variações grandes podem refletir amostra pequena. A variação compara o levantamento e a comparação escolhidos nos filtros.";
       CSV_ATUAL = { nome: "lira-historico-bairros.csv", cab: colsB.map(function (c) { return c.t.replace(/<[^>]+>/g, ""); }), linhas: [fixa].concat(linhasB).map(function (r) { return colsB.map(function (c) { return c.tx(r); }); }) };
     }
   }
