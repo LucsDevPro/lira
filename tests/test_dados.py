@@ -35,7 +35,7 @@ def test_gerador_preserva_dados_e_sinaliza_pendentes(tmp_path):
     assert por["288-289"]["total_geral"] is None                           # nada inventado
     assert por["288-289"]["id_ciclo"] == 160 and por["331-332"]["id_ciclo"] == 165
     assert por["307-308"]["id_ciclo"] == 162 and por["318-319"]["id_ciclo"] == 163
-    assert any("ciclo" in a for a in por["307-308"]["ausentes"])           # ausência sinalizada
+    assert not any("ciclo" in a for a in por["307-308"]["ausentes"])       # ciclo não é mais exibido como aviso
 
     # valores originais intactos
     h = historico()

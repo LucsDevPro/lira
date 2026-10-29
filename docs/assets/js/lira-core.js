@@ -465,6 +465,20 @@
     XLSX.writeFile(wb, "LIRA_" + lev.semana_inicio + "_" + lev.semana_fim + ".xlsx");
   }
 
+  /* ---------- faixa de botões para trocar de mês (levantamento) ---------- */
+  function seletorMeses(el, atual, aoEscolher) {
+    el.innerHTML = LEVS.map(function (l) {
+      var c = l.status === "com_dados" ? calc(l.total_geral) : null;
+      var sel = l === atual;
+      return '<button type="button" class="mes' + (sel ? " sel" : "") + (c ? "" : " sem") + '" data-chave="' + esc(l.chave) + '"' + (sel ? ' aria-current="true"' : "") + ">" +
+        '<span class="mes-nome">' + esc(l.nome.split("/")[0]) + '<i>' + esc(l.nome.split("/")[1] || "") + "</i></span>" +
+        '<span class="mes-info">' + (c ? "IIP " + esc(fmtPct(c.iip)) : "Sem dados") + "</span></button>";
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () { aoEscolher(b.getAttribute("data-chave")); });
+    });
+  }
+
   global.LIRA = {
     data: D, regras: REGRAS, levantamentos: LEVS, comDados: COM_DADOS, porChave: porChave, principal: principal,
     esc: esc, fmtInt: fmtInt, fmtDec: fmtDec, fmtPct: fmtPct, fmtSinal: fmtSinal, fmtData: fmtData, fmtDataHora: fmtDataHora,
@@ -472,7 +486,7 @@
     classificar: classificar, selo: selo, regua: regua, ICONES: ICONES, ICO: ICO,
     TIPOS: TIPOS, DESC_TIPOS: DESC_TIPOS, calc: calc, agregar: agregar, areasDe: areasDe, variacao: variacao, delta: delta,
     nomeBairro: nomeBairro, codigoArea: codigoArea,
-    montarChrome: montarChrome, deslizante: deslizante, css: css, configurarChartJS: configurarChartJS, opcoesBase: opcoesBase,
+    seletorMeses: seletorMeses, montarChrome: montarChrome, deslizante: deslizante, css: css, configurarChartJS: configurarChartJS, opcoesBase: opcoesBase,
     criarGrafico: criarGrafico, destruirGrafico: destruirGrafico, baixarCSV: baixarCSV, baixarExcel: baixarExcel,
     temaEfetivo: temaEfetivo
   };

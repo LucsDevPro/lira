@@ -531,3 +531,61 @@ table.dados td a:hover { color: var(--accent); text-decoration: underline; }
 .feedback { font-size: 13px; color: var(--ink-2); align-self: center; }
 .resumo-grade { align-items: start; }
 .editar summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 8px; }
+
+/* ---- Botões de troca de mês ---- */
+.meses { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 24px; }
+.mes { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 18px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; font: inherit; transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s, border-color .2s, background .2s, color .2s; }
+.mes:hover { transform: translateY(-2px); border-color: var(--marinho); box-shadow: 0 8px 22px rgba(0, 43, 104, .12); }
+.mes:focus-visible { outline: 3px solid color-mix(in srgb, var(--azul, #007eca) 55%, transparent); outline-offset: 2px; }
+.mes-nome { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.mes-nome i { font-style: normal; font-weight: 600; opacity: .6; margin-left: 6px; font-size: 14px; }
+.mes-info { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.mes.sem { border-style: dashed; }
+.mes.sel { background: var(--marinho); border-color: var(--marinho); color: #fff; box-shadow: 0 10px 26px rgba(0, 43, 104, .28); }
+.mes.sel .mes-info { color: rgba(255,255,255,.85); }
+[data-theme="dark"] .mes.sel { background: var(--azul, #007eca); border-color: var(--azul, #007eca); }
+@media (max-width: 760px) { .meses { grid-template-columns: repeat(2, 1fr); } .mes { padding: 12px 14px; } }
+@media print { .meses { display: none !important; } }
+
+/* ---- Tabela comparativa agrupada ---- */
+table.comp th.num, table.comp td.num { text-align: right; white-space: nowrap; }
+table.comp tr.grupo th { text-align: left; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); padding: 8px 14px; border-top: 1px solid var(--line); }
+table.comp td { padding-top: 12px; padding-bottom: 12px; vertical-align: top; }
+table.comp td:first-child { font-weight: 600; color: var(--ink); }
+table.comp .sel-linha { margin-top: 6px; display: flex; justify-content: flex-end; }
+table.comp .pct { color: var(--muted); }
+
+/* ---- Refinamentos visuais ---- */
+/* KPIs: 6 em linha no desktop, 3×2 em tablet, 2 colunas no celular */
+.g-kpi { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .g-kpi { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .g-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpi { padding: 16px; } .kpi .val { font-size: 26px; } }
+.kpi .rot { min-height: 2.6em; }
+
+/* Régua: faixas inativas mais legíveis */
+.regua.tem-atual .regua-faixa:not(.atual) { opacity: .72; }
+
+/* Filtros compactos */
+.filtros { padding: 14px 18px; }
+.filtros-grade { grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 12px; }
+.filtros-rodape { margin-top: 12px; padding-top: 10px; }
+@media (max-width: 1050px) { .filtros-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .filtros-grade { grid-template-columns: 1fr; } }
+
+/* Respiro e identidade das seções */
+.secao { margin-top: 56px; }
+.secao-titulo h2 { display: flex; align-items: center; gap: 10px; }
+.secao-titulo h2::before { content: ""; width: 5px; height: 22px; border-radius: 4px; background: linear-gradient(180deg, var(--azul, #007eca), var(--marinho)); flex: none; }
+@media (max-width: 760px) { .secao { margin-top: 40px; } }
+
+/* Home: caixa de variação */
+.var-lista { display: flex; flex-direction: column; gap: 4px; }
+.var-item { padding: 14px 0; border-top: 1px solid var(--line); }
+.var-item:first-child { border-top: 0; padding-top: 4px; }
+.var-topo { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; color: var(--ink-2); }
+.var-topo b { font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -.02em; }
+.var-baixo { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 13px; color: var(--ink-2); font-weight: 600; }
+#boxVariacation, #boxVariacao { display: flex; flex-direction: column; }
+
+/* Tabela histórica: cabeçalho fixo e rolagem suave */
+.tabela-scroll { scrollbar-width: thin; }

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard — Comparação dos LIRAa · Ponta Porã</title>
-<meta name="description" content="Histórico e comparação dos LIRAa de Ponta Porã: evolução do IIP e do IB, variação entre ciclos, ranking de bairros e principais criadouros.">
+<meta name="description" content="Histórico e comparação dos LIRAa de Ponta Porã: evolução do IIP e do IB, variação entre levantamentos, ranking de bairros e principais criadouros.">
 <link rel="icon" href="assets/logo_pmpp.png">
 <link rel="stylesheet" href="assets/css/lira.css">
 </head>
@@ -15,7 +15,7 @@
   <div class="page-head">
     <div>
       <h1>Dashboard — comparação dos LIRAa</h1>
-      <p>Histórico dos levantamentos, evolução do IIP e do IB, variação entre ciclos, ranking de bairros e principais criadouros.</p>
+      <p>Histórico dos levantamentos, evolução do IIP e do IB, variação entre levantamentos, ranking de bairros e principais criadouros.</p>
     </div>
     <div class="acoes">
       <button class="btn" id="btnCsv" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>Baixar tabela (CSV)</button>
@@ -30,8 +30,6 @@
       <div class="campo"><label for="fComp">Comparar com</label><select id="fComp"></select></div>
       <div class="campo"><label for="fEstrato">Estrato</label><select id="fEstrato"></select></div>
       <div class="campo"><label for="fBairro">Bairro</label><select id="fBairro"></select></div>
-      <div class="campo"><label for="fDe">Período: de</label><input type="date" id="fDe"></div>
-      <div class="campo"><label for="fAte">Período: até</label><input type="date" id="fAte"></div>
       <div class="campo" style="justify-content:flex-end"><button class="btn" id="btnLimpar" type="button">Limpar filtros</button></div>
     </div>
     <div class="filtros-rodape">
@@ -75,7 +73,7 @@
     </section>
 
     <section class="secao" id="sComp" aria-labelledby="tVar">
-      <div class="secao-titulo"><h2 id="tVar">Variação e comparação entre ciclos</h2><p id="subComp"></p></div>
+      <div class="secao-titulo"><h2 id="tVar">Variação e comparação entre levantamentos</h2><p id="subComp"></p></div>
       <div class="grid g-2">
         <div class="card">
           <h3 class="card-titulo">Variação do IIP entre levantamentos consecutivos</h3>

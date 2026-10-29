@@ -150,12 +150,12 @@ def test_dashboard_graficos_e_secoes(navegador, site_atual):
         assert page.evaluate(f"!!Chart.getChart('{canvas}')"), canvas
     # evolução: IIP e IB, 2 levantamentos com dados (maio e agosto)
     cfg = page.evaluate("(() => { const c = Chart.getChart('gEvolucao'); return {l: c.data.labels, d: c.data.datasets.map(d => d.data)}; })()")
-    assert cfg["l"] == ["Maio/2026", "Agosto/2026"]
-    assert cfg["d"] == [[5.34, 1.39], [5.34, 1.39]]
+    assert cfg["l"] == ["Janeiro/2026", "Maio/2026", "Agosto/2026", "Novembro/2026"]   # meses sem dados ficam vazios
+    assert cfg["d"] == [[None, 5.34, 1.39, None], [None, 5.34, 1.39, None]]
     # variação entre ciclos: 1,39 − 5,34 = −3,95
     assert page.evaluate("Chart.getChart('gVariacao').data.datasets[0].data") == [-3.95]
     # legenda oficial presente e destacando o resultado atual
-    assert page.locator("#legendas .regua-faixa.atual").count() == 2
+    assert page.locator("#legendas .regua-faixa.atual").count() == 1   # só a régua do IIP
     assert "Resultado atual" in texto(page, "#legendas")
     # KPIs: imóveis pesquisados e positivos
     kpis = texto(page, "#kpis")
@@ -176,17 +176,12 @@ def test_dashboard_filtros(navegador, site_atual):
 
     assert page.locator("#fCiclo").count() == 0                                    # filtro de ciclo removido
 
-    # Período: apenas julho a setembro
-    page.fill("#fDe", "2026-07-01"); page.fill("#fAte", "2026-09-30")
-    assert page.evaluate("Chart.getChart('gEvolucao').data.labels") == ["Agosto/2026"]
-    page.fill("#fDe", "2026-12-01"); page.fill("#fAte", "")
-    assert page.is_visible("#semResultado") and not page.is_visible("#painel")
-    page.click("#btnLimpar")
+    assert page.locator("#fDe").count() == 0 and page.locator("#fAte").count() == 0   # filtro de período removido
     assert page.is_visible("#painel")
 
     # Estrato 1: IIP 0,88% (agosto) / 7,59% (maio)
     page.select_option("#fEstrato", "Estrato 1")
-    assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [7.59, 0.88]
+    assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [None, 7.59, 0.88, None]
     assert "0,88%" in texto(page, "#kpis") and "Baixo risco" in texto(page, "#kpis")
     assert "Baixo risco" in texto(page, "#legendas .regua-faixa.atual")
     assert page.locator("#listaRanking .rank-item").count() == 10 and "Estrato 1" in texto(page, "#listaRanking")
@@ -194,12 +189,12 @@ def test_dashboard_filtros(navegador, site_atual):
     # Bairro: 434 - Vila Aurea (agosto: 4 de 34 = 11,76% -> Alto risco)
     page.click("#btnLimpar")
     page.select_option("#fBairro", "434")
-    assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [26.32, 11.76]
+    assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [None, 26.32, 11.76, None]
     assert "11,76%" in texto(page, "#kpis") and "Alto risco" in texto(page, "#kpis")
     assert "Bairro: Vila Aurea" in texto(page, "#chips")
     # remover o filtro pelo chip
     page.click("#chips button")
-    assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [5.34, 1.39]
+    assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [None, 5.34, 1.39, None]
 
     # trocar levantamento em foco e comparação
     page.select_option("#fFoco", "307-308")
@@ -229,7 +224,7 @@ def test_dashboard_com_tres_levantamentos(navegador, site_com_novembro):
     page = abrir(navegador, site_com_novembro, "dashboard.html")
     assert page.erros == []
     assert len(page.evaluate("Chart.getChart('gVariacao').data.datasets[0].data")) == 2
-    assert page.evaluate("Chart.getChart('gEvolucao').data.labels") == ["Maio/2026", "Agosto/2026", "Novembro/2026"]
+    assert page.evaluate("Chart.getChart('gEvolucao').data.labels") == ["Janeiro/2026", "Maio/2026", "Agosto/2026", "Novembro/2026"]
     assert "Novembro/2026" in texto(page, "#fFoco")
 
 
@@ -366,3 +361,18 @@ def test_resumo_levantamento_sem_dados(navegador, site_atual):
 def test_resumo_celular_sem_rolagem(navegador, site_atual):
     page = abrir(navegador, site_atual, "resumo.html?id=318-319", 390, 800)
     assert page.evaluate("document.documentElement.scrollWidth") <= 390
+
+
+def test_botoes_de_mes_e_sem_ciclo_no_site(navegador, site_atual):
+    for pagina in ("levantamento.html?id=318-319", "resumo.html?id=318-319"):
+        page = abrir(navegador, site_atual, pagina)
+        assert page.locator("#meses .mes").count() == 4
+        assert "Agosto" in texto(page, "#meses .mes.sel")
+        assert "iclo" not in texto(page, "main")
+        page.click("#meses .mes:has-text('Maio')")
+        assert "Maio" in texto(page, "#meses .mes.sel")
+        assert page.erros == []
+    dash = abrir(navegador, site_atual, "dashboard.html")
+    assert "iclo" not in texto(dash, "main")
+    pg = abrir(navegador, site_atual, "levantamento.html?id=331-332")
+    assert "iclo" not in texto(pg, "main")

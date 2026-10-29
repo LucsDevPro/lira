@@ -426,6 +426,10 @@ def coletar_alvo(driver, alvo):
 
     df_total = pd.concat([df.iloc[:-1] for df in dfs], ignore_index=True)
     df_total = adicionar_total(df_total, "TOTAL GERAL")
+    # diagnóstico no log do workflow: o que o eVisita devolveu para este levantamento
+    print(f"[diagnóstico] {alvo['nome']} (ciclo {alvo.get('id_ciclo')}, semanas {alvo['semana_inicio']}-{alvo['semana_fim']}): "
+          + " | ".join(f"E{i}: {int(df.iloc[-1]['Total_Imoveis'])} imóveis" for i, df in enumerate(dfs, start=1)))
+    print(f"[diagnóstico] URL de exemplo: {montar_url(AREAS_ESTRATO_1[0], alvo['semana_inicio'], alvo['semana_fim'], alvo['id_atividade'], alvo['id_ano'], alvo['id_ciclo'])}")
     return dfs, df_total
 
 

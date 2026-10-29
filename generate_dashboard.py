@@ -114,8 +114,6 @@ def enriquecer(chave, snap, lev):
 
     id_ciclo = snap.get("id_ciclo", lev.get("id_ciclo") if lev else None)
     id_ano = snap.get("id_ano", lev.get("id_ano") if lev else None)
-    if id_ciclo is None:
-        ausentes.append("id do ciclo (eVisita) não registrado")
     for campo in CAMPOS_ESPERADOS:
         if campo not in snap["total_geral"]:
             ausentes.append(f"campo {campo} ausente")
@@ -148,9 +146,9 @@ def pendente(lev, estado):
         lev["semana_inicio"], lev["semana_fim"], lev.get("se_inicio"))
     ex = estado.get("execucoes", {}).get(lev["chave"], {})
     if lev["coleta"] == "recuperacao_unica":
-        motivo = "Recuperação única agendada para a próxima atualização automática."
+        motivo = "Aguardando coleta de dados."
     elif lev["coleta"] == "automatica":
-        motivo = "Aguardando os lançamentos no eVisita; coleta automática em andamento."
+        motivo = "Aguardando coleta de dados."
     else:
         motivo = "Sem dados no histórico."
     return {

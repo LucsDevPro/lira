@@ -16,7 +16,7 @@
       '<div class="destaque-info">' +
       '<span class="eyebrow">' + esc(opts.chip || "Levantamento") + "</span>" +
       "<" + tag + ">LIRAa " + esc(lev.nome) + "</" + tag + ">" +
-      '<p class="sub">' + esc(lev.semana_exibicao.rotulo) + " · ciclo " + esc(lev.id_ciclo == null ? "não informado" : lev.id_ciclo) +
+      '<p class="sub">' + esc(lev.semana_exibicao.rotulo) +
       " · coletado em " + esc(L.fmtDataHora(lev.coletado_em)) + "</p>" +
       '<div class="destaque-indices">' +
       '<div class="indice-grande"><div class="rot">IIP · Índice de Infestação Predial</div><div class="val">' + esc(L.fmtPct(c.iip)) + "</div>" + L.selo("iip", c.iip) + "</div>" +

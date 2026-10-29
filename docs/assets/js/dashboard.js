@@ -51,11 +51,7 @@
   }
 
   /* ---------- filtro ---------- */
-  function noFiltro(l) {
-    if (S.de && l.periodo.fim < S.de) return false;
-    if (S.ate && l.periodo.inicio > S.ate) return false;
-    return true;
-  }
+  function noFiltro() { return true; }   // sem filtro de período: o mês escolhido já define o levantamento
   function F() { return { estrato: S.estrato || null, codigo: S.bairro || null }; }
   function escopoTexto() {
     var p = [];
@@ -104,7 +100,6 @@
   /* ---------- atualização geral ---------- */
   function atualizar() {
     S.estrato = $("fEstrato").value; S.bairro = $("fBairro").value;
-    S.de = $("fDe").value; S.ate = $("fAte").value;
     if (S.bairro && S.estrato && BAIRROS[S.bairro].estrato !== S.estrato) { S.bairro = ""; }
     montarBairros();
 
@@ -134,7 +129,7 @@
       $("fFoco").innerHTML = vis.slice().reverse().map(function (l) { return opt(l.chave, l.nome + " · " + l.semana_exibicao.rotulo, l === foco); }).join("");
       $("fComp").innerHTML = opt("auto", "Automático (levantamento anterior)", S.comp === "auto") + opt("none", "Nenhum", S.comp === "none") +
         vis.filter(function (l) { return l !== foco; }).reverse().map(function (l) { return opt(l.chave, l.nome, S.comp === l.chave); }).join("");
-      renderPainel(vis, foco, comp, f);
+      renderPainel(vis, foco, comp, f, visTodos);
     } else {
       $("fFoco").innerHTML = opt("", "—"); $("fComp").innerHTML = opt("", "—");
     }
@@ -146,12 +141,10 @@
     function add(txt, limpar) { c.push('<span class="chip-filtro">' + esc(txt) + '<button type="button" aria-label="Remover filtro ' + esc(txt) + '" data-limpar="' + limpar + '">×</button></span>'); }
     if (S.estrato) add(S.estrato, "estrato");
     if (S.bairro) add("Bairro: " + BAIRROS[S.bairro].nome, "bairro");
-    if (S.de) add("de " + L.fmtData(S.de), "de");
-    if (S.ate) add("até " + L.fmtData(S.ate), "ate");
     $("chips").innerHTML = c.join("") || '<span class="contagem">Nenhum filtro ativo</span>';
     $("chips").querySelectorAll("button").forEach(function (b) {
       b.addEventListener("click", function () {
-        var m = { estrato: "fEstrato", bairro: "fBairro", de: "fDe", ate: "fAte" }[b.getAttribute("data-limpar")];
+        var m = { estrato: "fEstrato", bairro: "fBairro" }[b.getAttribute("data-limpar")];
         $(m).value = ""; atualizar();
       });
     });
@@ -164,7 +157,7 @@
     return '<span class="delta igual">' + ic + esc(L.fmtSinal(v.abs, 0)) + (rot ? " " + esc(rot) : "") + "</span>";
   }
 
-  function renderPainel(vis, foco, comp, f) {
+  function renderPainel(vis, foco, comp, f, visTodos) {
     var c = L.agregar(foco, f), cp = comp ? L.agregar(comp, f) : null;
     var escopo = escopoTexto();
     $("subResumo").textContent = foco.nome + " · " + foco.semana_exibicao.rotulo + " · " + escopo + (comp ? " · comparado a " + comp.nome : "");
@@ -176,7 +169,7 @@
       function kpi(t, v, extra, sub) { return '<article class="card kpi"><div class="rot">' + t + '</div><div class="val">' + v + "</div>" + (extra || "") + (sub ? '<div class="sub">' + sub + "</div>" : "") + "</article>"; }
       $("kpis").innerHTML =
         kpi("IIP · Infestação Predial", esc(L.fmtPct(c.iip)), '<div style="margin-top:6px">' + L.selo("iip", c.iip) + "</div>", cp ? L.delta(dI, "p.p. " + rot, 2) : "") +
-        kpi("IB · Índice de Breteau", esc(L.fmtDec(c.ib)), '<div style="margin-top:6px">' + L.selo("ib", c.ib) + "</div>", cp ? L.delta(dB, rot, 2) : "") +
+        kpi("IB · Índice de Breteau", esc(L.fmtDec(c.ib)), "", cp ? L.delta(dB, rot, 2) : "") +
         kpi("Imóveis pesquisados", L.fmtInt(c.pesq), "", cp ? deltaNum(L.variacao(c.pesq, cp.pesq), rot) : "") +
         kpi("Imóveis positivos", L.fmtInt(c.pos), "", cp ? L.delta(L.variacao(c.pos, cp.pos), rot, 0) : "") +
         kpi("Depósitos positivos", L.fmtInt(c.dep), "", cp ? L.delta(L.variacao(c.dep, cp.dep), rot, 0) : "") +
@@ -184,7 +177,7 @@
     }
 
     $("subClass").textContent = c ? foco.nome + " · " + escopo : "";
-    $("legendas").innerHTML = '<div class="card">' + L.regua("iip", c ? c.iip : null) + '</div><div class="card">' + L.regua("ib", c ? c.ib : null) + "</div>" +
+    $("legendas").innerHTML = '<div class="card span-2">' + L.regua("iip", c ? c.iip : null) + "</div>" +
       (S.estrato || S.bairro ? '<div class="aviso span-2">' + L.ICO.info + "<div>A classificação mostrada vale para o recorte filtrado (" + esc(escopo) + "). As faixas oficiais do Ministério da Saúde são definidas para o município; use este recorte como apoio à análise.</div></div>" : "");
 
     /* evolução */
@@ -193,14 +186,14 @@
       $("vGrafico").setAttribute("aria-pressed", String(!S.tabela)); $("vTabela").setAttribute("aria-pressed", String(S.tabela));
       if (S.tabela) {
         L.destruirGrafico("gEvolucao");
-        $("tabEvol").innerHTML = '<table class="dados"><thead><tr><th class="esq">Levantamento</th><th>Pesquisados</th><th>Positivos</th><th>IIP</th><th>Classificação IIP</th><th>IB</th><th>Classificação IB</th></tr></thead><tbody>' +
+        $("tabEvol").innerHTML = '<table class="dados"><thead><tr><th class="esq">Levantamento</th><th>Pesquisados</th><th>Positivos</th><th>IIP</th><th>Classificação IIP</th><th>IB</th></tr></thead><tbody>' +
           vis.map(function (l) {
             var x = L.agregar(l, f);
-            return x ? "<tr><td>" + esc(l.nome) + "</td><td>" + L.fmtInt(x.pesq) + "</td><td>" + L.fmtInt(x.pos) + "</td><td>" + L.fmtPct(x.iip) + "</td><td>" + L.selo("iip", x.iip) + "</td><td>" + L.fmtDec(x.ib) + "</td><td>" + L.selo("ib", x.ib) + "</td></tr>"
-              : "<tr><td>" + esc(l.nome) + '</td><td colspan="6">Bairro sem registro</td></tr>';
+            return x ? "<tr><td>" + esc(l.nome) + "</td><td>" + L.fmtInt(x.pesq) + "</td><td>" + L.fmtInt(x.pos) + "</td><td>" + L.fmtPct(x.iip) + "</td><td>" + L.selo("iip", x.iip) + "</td><td>" + L.fmtDec(x.ib) + "</td></tr>"
+              : "<tr><td>" + esc(l.nome) + '</td><td colspan="5">Bairro sem registro</td></tr>';
           }).join("") + "</tbody></table>";
       } else {
-        W.graficoEvolucao("gEvolucao", vis, f);
+        W.graficoEvolucao("gEvolucao", visTodos, f);
       }
     }
     evol(); S.evol = evol;
@@ -244,23 +237,24 @@
     $("subGrupo").textContent = comp ? foco.nome + " × " + comp.nome + ". O filtro de estrato/bairro não se aplica a este gráfico." : "Escolha um levantamento em “Comparar com” para ver os dois lado a lado.";
     $("subComp").textContent = comp ? foco.nome + " comparado a " + comp.nome + " (" + escopo + ")" : "Sem levantamento de comparação";
 
-    /* tabela comparativa */
+    /* tabela comparativa (agrupada, com variação em uma coluna só) */
     if (c) {
-      var linhas = [
-        ["IIP", L.fmtPct(c.iip), cp && L.fmtPct(cp.iip), cp && L.variacao(c.iip, cp.iip), "p.p.", 2],
-        ["Classificação do IIP", L.selo("iip", c.iip), cp && L.selo("iip", cp.iip)],
-        ["IB", L.fmtDec(c.ib), cp && L.fmtDec(cp.ib), cp && L.variacao(c.ib, cp.ib), "", 2],
-        ["Classificação do IB", L.selo("ib", c.ib), cp && L.selo("ib", cp.ib)],
-        ["Imóveis pesquisados", L.fmtInt(c.pesq), cp && L.fmtInt(cp.pesq), cp && L.variacao(c.pesq, cp.pesq), "", 0],
-        ["Imóveis positivos", L.fmtInt(c.pos), cp && L.fmtInt(cp.pos), cp && L.variacao(c.pos, cp.pos), "", 0],
-        ["Depósitos positivos", L.fmtInt(c.dep), cp && L.fmtInt(cp.dep), cp && L.variacao(c.dep, cp.dep), "", 0],
-        ["Tubitos (focos)", L.fmtInt(c.tub), cp && L.fmtInt(cp.tub), cp && L.variacao(c.tub, cp.tub), "", 0],
-        ["Imóveis com Ae. albopictus", L.fmtInt(c.alb), cp && L.fmtInt(cp.alb), cp && L.variacao(c.alb, cp.alb), "", 0]
+      function linha(nome, fmt, key, extra, dec, un) {
+        return { nome: nome, a: fmt(c[key]) + (extra ? " " + extra(c) : ""), b: cp ? fmt(cp[key]) + (extra ? " " + extra(cp) : "") : null, v: cp ? L.variacao(c[key], cp[key]) : null, un: un || "", dec: dec };
+      }
+      var iipSelo = function (x) { return '<div class="sel-linha">' + L.selo("iip", x.iip) + "</div>"; };
+      var grupos = [
+        { t: "Índices", l: [linha("IIP · Índice de Infestação Predial", L.fmtPct, "iip", iipSelo, 2, "p.p."), linha("IB · Índice de Breteau", L.fmtDec, "ib", null, 2)] },
+        { t: "Imóveis", l: [linha("Imóveis pesquisados", L.fmtInt, "pesq", null, 0), linha("Imóveis positivos", L.fmtInt, "pos", null, 0)] },
+        { t: "Depósitos e focos", l: [linha("Depósitos positivos", L.fmtInt, "dep", null, 0), linha("Tubitos (focos)", L.fmtInt, "tub", null, 0), linha("Imóveis com Ae. albopictus", L.fmtInt, "alb", null, 0)] }
       ];
-      $("tabComp").innerHTML = '<table class="dados"><thead><tr><th>Indicador</th><th>' + esc(foco.nome) + "</th>" + (comp ? "<th>" + esc(comp.nome) + "</th><th>Variação</th><th>Variação %</th>" : "") + "</tr></thead><tbody>" +
-        linhas.map(function (r) {
-          return "<tr><td>" + esc(r[0]) + "</td><td>" + r[1] + "</td>" + (comp ? "<td>" + (r[2] || "—") + "</td><td>" + (r[3] ? L.delta(r[3], r[4], r[5]) : "") + "</td><td>" + (r[3] && r[3].pct != null ? esc(L.fmtSinal(r[3].pct, 1)) + "%" : (r[3] ? "—" : "")) + "</td>" : "") + "</tr>";
-        }).join("") + "</tbody></table>";
+      var cab = "<thead><tr><th>Indicador</th><th class=\"num\">" + esc(foco.nome) + "</th>" + (comp ? "<th class=\"num\">" + esc(comp.nome) + "</th><th class=\"num\">Variação</th>" : "") + "</tr></thead>";
+      $("tabComp").innerHTML = '<table class="dados comp">' + cab + grupos.map(function (g) {
+        return '<tbody><tr class="grupo"><th colspan="' + (comp ? 4 : 2) + '">' + esc(g.t) + "</th></tr>" + g.l.map(function (r) {
+          var pct = r.v && r.v.pct != null ? ' <small class="pct">(' + esc(L.fmtSinal(r.v.pct, 1)) + "%)</small>" : "";
+          return "<tr><td>" + esc(r.nome) + '</td><td class="num">' + r.a + "</td>" + (comp ? '<td class="num">' + (r.b == null ? "—" : r.b) + '</td><td class="num">' + (r.v ? L.delta(r.v, r.un, r.dec) + pct : "—") + "</td>" : "") + "</tr>";
+        }).join("") + "</tbody>";
+      }).join("") + "</table>";
     } else $("tabComp").innerHTML = "";
 
     /* imóveis pesquisados e positivos */
@@ -313,9 +307,6 @@
       var cols = [
         { t: "Levantamento", esq: true, v: function (r) { return r.l.semana_inicio * 1; }, h: function (r) { return '<a href="levantamento.html?id=' + esc(r.l.chave) + '"><b>' + esc(r.l.nome) + "</b></a>" + (r.l.status === "sem_dados" ? ' <span class="selo neutro mini">Sem dados</span>' : ""); }, tx: function (r) { return r.l.nome + (r.l.status === "sem_dados" ? " (sem dados)" : ""); } },
         { t: "SE", esq: true, v: function (r) { return r.l.semana_exibicao.rotulo; }, h: function (r) { return esc(r.l.semana_exibicao.rotulo); }, tx: function (r) { return r.l.semana_exibicao.rotulo; } },
-        { t: "Período", esq: true, v: function (r) { return r.l.periodo.inicio; }, h: function (r) { return esc(L.fmtPeriodo(r.l.periodo)) + (r.l.periodo_origem !== "data da coleta" ? ' <abbr title="Estimado a partir do ID da semana do eVisita">*</abbr>' : ""); }, tx: function (r) { return L.fmtPeriodo(r.l.periodo); } },
-        { t: "Ciclo", v: function (r) { return r.l.id_ciclo; }, h: function (r) { return r.l.id_ciclo == null ? '<abbr title="Não registrado no histórico">n/i</abbr>' : r.l.id_ciclo; }, tx: function (r) { return r.l.id_ciclo == null ? "não informado" : r.l.id_ciclo; } },
-        { t: "IDs da semana", v: function (r) { return r.l.semana_inicio * 1; }, h: function (r) { return r.l.semana_inicio + "–" + r.l.semana_fim; }, tx: function (r) { return r.l.semana_inicio + "-" + r.l.semana_fim; } },
         { t: "Coletado em", v: function (r) { return r.l.coletado_em; }, h: function (r) { return r.l.coletado_em ? esc(L.fmtDataHora(r.l.coletado_em)) : "—"; }, tx: function (r) { return r.l.coletado_em ? L.fmtDataHora(r.l.coletado_em) : ""; } },
         Object.assign({ t: "Pesquisados" }, num(function (c) { return c.pesq; })),
         Object.assign({ t: "Positivos" }, num(function (c) { return c.pos; })),
@@ -324,14 +315,13 @@
         { t: "Classe IIP", esq: true, v: function (r) { return r.c ? r.c.iip : null; }, h: function (r) { return r.c ? L.selo("iip", r.c.iip) : "—"; }, tx: function (r) { var k = r.c && L.classificar("iip", r.c.iip); return k ? k.rotulo : ""; } },
         { t: "Δ IIP (p.p.)", v: function (r) { return r.dI ? r.dI.abs : null; }, h: function (r) { return r.dI ? L.delta(r.dI, "", 2) : "—"; }, tx: function (r) { return r.dI ? L.fmtSinal(r.dI.abs, 2) : ""; } },
         { t: "IB", v: function (r) { return r.c ? r.c.ib : null; }, h: function (r) { return r.c ? '<span class="cel-iip">' + esc(L.fmtDec(r.c.ib)) + "</span>" : "—"; }, tx: function (r) { return r.c ? L.fmtDec(r.c.ib) : ""; } },
-        { t: "Classe IB", esq: true, v: function (r) { return r.c ? r.c.ib : null; }, h: function (r) { return r.c ? L.selo("ib", r.c.ib) : "—"; }, tx: function (r) { var k = r.c && L.classificar("ib", r.c.ib); return k ? k.rotulo + "" : ""; } },
         { t: "Δ IB", v: function (r) { return r.dB ? r.dB.abs : null; }, h: function (r) { return r.dB ? L.delta(r.dB, "", 2) : "—"; }, tx: function (r) { return r.dB ? L.fmtSinal(r.dB.abs, 2) : ""; } },
         Object.assign({ t: "Tubitos" }, num(function (c) { return c.tub; }))
       ];
       L.TIPOS.forEach(function (k) { cols.push(Object.assign({ t: '<abbr title="' + esc(L.DESC_TIPOS[k][0] + " — " + L.DESC_TIPOS[k][1]) + '">' + k + "</abbr>" }, num(function (c) { return c.tipos[k]; }))); });
       cols.push(Object.assign({ t: "Imóveis c/ albopictus" }, num(function (c) { return c.alb; })));
       tabela($("tabHist"), cols, linhas, "lev");
-      $("notaHist").innerHTML = "* período estimado a partir do ID da semana do eVisita · n/i = não informado · Δ = diferença para o levantamento anterior com dados dentro do filtro.";
+      $("notaHist").innerHTML = "* período estimado a partir do ID da semana do eVisita · n/i = não informado · Δ = diferença para o levantamento anterior com dados dentro do filtro. Deslize a tabela para o lado para ver todas as colunas.";
       CSV_ATUAL = { nome: "lira-historico-levantamentos.csv", cab: cols.map(function (c) { return c.t.replace(/<[^>]+>/g, ""); }), linhas: linhas.map(function (r) { return cols.map(function (c) { return c.tx(r); }); }) };
     } else {
       // por bairro
@@ -361,7 +351,7 @@
   }
 
   /* ---------- eventos ---------- */
-  ["fFoco", "fComp", "fEstrato", "fBairro", "fDe", "fAte"].forEach(function (id) {
+  ["fFoco", "fComp", "fEstrato", "fBairro"].forEach(function (id) {
     $(id).addEventListener("change", function () {
       if (id === "fFoco") S.foco = $("fFoco").value;
       if (id === "fComp") S.comp = $("fComp").value;
@@ -370,7 +360,7 @@
     });
   });
   $("btnLimpar").addEventListener("click", function () {
-    ["fEstrato", "fBairro", "fDe", "fAte"].forEach(function (id) { $(id).value = ""; });
+    ["fEstrato", "fBairro"].forEach(function (id) { $(id).value = ""; });
     S.foco = ""; S.comp = "auto"; S.bairro = ""; atualizar();
   });
   $("rTop").addEventListener("click", function () { S.todos = false; atualizar(); });

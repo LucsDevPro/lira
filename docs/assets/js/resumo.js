@@ -8,13 +8,7 @@
   var atual = L.porChave(param) || L.principal().lev;
   var blobAtual = null;
 
-  function seletor() {
-    $("selLev").innerHTML = L.levantamentos.slice().reverse().map(function (l) {
-      return '<option value="' + esc(l.chave) + '"' + (l === atual ? " selected" : "") + ">" + esc(l.nome + " · " + l.semana_exibicao.rotulo + (l.status === "sem_dados" ? " (sem dados)" : "")) + "</option>";
-    }).join("");
-    var i = L.levantamentos.indexOf(atual);
-    $("btnAnt").disabled = i <= 0; $("btnProx").disabled = i >= L.levantamentos.length - 1;
-  }
+  function seletor() { L.seletorMeses($("meses"), atual, ir); }
   function aviso(id, msg) {
     var el = $(id); el.textContent = msg; clearTimeout(el._t);
     el._t = setTimeout(function () { el.textContent = ""; }, 3500);
@@ -71,8 +65,5 @@
       });
     });
   }
-  $("selLev").addEventListener("change", function () { ir(this.value); });
-  $("btnAnt").addEventListener("click", function () { ir(L.levantamentos[L.levantamentos.indexOf(atual) - 1].chave); });
-  $("btnProx").addEventListener("click", function () { ir(L.levantamentos[L.levantamentos.indexOf(atual) + 1].chave); });
   render();
 })();

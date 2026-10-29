@@ -46,7 +46,7 @@
       "semana_inicio": 307,
       "semana_fim": 308,
       "coleta": "somente_historico",
-      "observacao": "Importado de planilha antiga. No eVisita este levantamento usa id_ciclo=162 e semanas 307 a 309 (o histórico foi importado com as semanas 307-308 e foi mantido sem alteração)."
+      "observacao": "Importado de planilha antiga; o histórico usa as semanas 307-308 (no eVisita o levantamento vai até a semana 309)."
     },
     {
       "chave": "318-319",

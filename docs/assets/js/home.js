@@ -26,23 +26,22 @@
   W.cardsEstratos(document.getElementById("cardsEstratos"), lev);
   W.criadouros(document.getElementById("criadouros"), c);
   document.getElementById("subRanking").textContent = lev.nome + ". Cada bairro tem poucos imóveis: leia junto de “positivos de pesquisados”.";
-  W.ranking(document.getElementById("ranking"), lev, { limite: 5, comparado: anterior, limpo: true });
+  W.ranking(document.getElementById("ranking"), lev, { limite: 7, comparado: anterior, limpo: true });
   W.avisoAusentes(document.getElementById("avisoAusentes"), lev);
 
   /* Evolução (só IIP) */
-  function evolucao() { W.graficoEvolucao("gEvolucao", L.comDados, null, { soIip: true }); }
+  function evolucao() { W.graficoEvolucao("gEvolucao", L.levantamentos, null, { soIip: true }); }
   evolucao();
   document.addEventListener("lira:tema", evolucao);
 
-  /* Variação entre ciclos */
+  /* Variação entre levantamentos */
   var linhas = "";
   L.comDados.slice().reverse().forEach(function (l) {
     var i = L.comDados.indexOf(l), x = L.agregar(l), a = i ? L.agregar(L.comDados[i - 1]) : null;
-    linhas += "<dt>" + esc(l.nome) + "</dt><dd>" + esc(L.fmtPct(x.iip)) + "</dd>" +
-      (a ? '<dd class="sep"></dd>' : "");
-    if (a) linhas += '<dt style="font-size:12.5px;color:var(--muted)">variação</dt><dd>' + L.delta(L.variacao(x.iip, a.iip), "p.p.") + '</dd><dd class="sep"></dd>';
+    linhas += '<div class="var-item"><div class="var-topo"><span>' + esc(l.nome) + "</span><b>" + esc(L.fmtPct(x.iip)) + "</b></div>" +
+      (a ? '<div class="var-baixo"><span>variação</span>' + L.delta(L.variacao(x.iip, a.iip), "p.p.") + "</div>" : '<div class="var-baixo"><span>primeiro levantamento com dados</span></div>') + "</div>";
   });
-  document.getElementById("boxVariacao").innerHTML = '<h3 class="card-titulo">Variação entre ciclos</h3><p class="card-sub">IIP em cada levantamento e diferença para o anterior.</p><dl class="mini-lista">' + linhas + "</dl>";
+  document.getElementById("boxVariacao").innerHTML = '<h3 class="card-titulo">Variação entre levantamentos</h3><p class="card-sub">IIP em cada levantamento e diferença para o anterior.</p><div class="var-lista">' + linhas + "</div>";
 
   /* Lista de levantamentos */
   document.getElementById("listaLev").innerHTML = L.levantamentos.slice().reverse().map(function (l) {

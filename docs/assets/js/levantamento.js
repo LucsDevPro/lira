@@ -9,13 +9,7 @@
   var atual = L.porChave(param) || L.principal().lev;
   var sort = { k: null, dir: "asc" };
 
-  function montarSeletor() {
-    $("selLev").innerHTML = L.levantamentos.slice().reverse().map(function (l) {
-      return '<option value="' + esc(l.chave) + '"' + (l === atual ? " selected" : "") + ">" + esc(l.nome + " · " + l.semana_exibicao.rotulo + (l.status === "sem_dados" ? " (sem dados)" : "")) + "</option>";
-    }).join("");
-    var i = L.levantamentos.indexOf(atual);
-    $("btnAnt").disabled = i <= 0; $("btnProx").disabled = i >= L.levantamentos.length - 1;
-  }
+  function montarSeletor() { L.seletorMeses($("meses"), atual, ir); }
 
   function ir(chave) {
     atual = L.porChave(chave) || atual;
@@ -33,7 +27,7 @@
     if (sem) {
       var ex = atual.ultima_tentativa;
       $("semDados").innerHTML = '<div class="card"><div class="vazio"><strong>' + esc(atual.nome) + " ainda não tem dados</strong>" +
-        esc((atual.ausentes || [])[0] || "") + "<br>" + esc(atual.semana_exibicao.rotulo) + " · ciclo " + esc(atual.id_ciclo == null ? "não informado" : atual.id_ciclo) +
+        esc((atual.ausentes || [])[0] || "") + "<br>" + esc(atual.semana_exibicao.rotulo) +
         " · IDs de semana " + esc(atual.semana_inicio + "–" + atual.semana_fim) +
         (ex ? "<br>Última tentativa: " + esc(L.fmtDataHora(ex.em)) + " (" + esc(ex.resultado) + ")" : "") + "</div></div>" +
         '<section class="secao"><div class="card">' + L.regua("iip", null) + "</div></section>";
@@ -113,10 +107,6 @@
     }
     desenhar();
   }
-
-  $("selLev").addEventListener("change", function () { ir($("selLev").value); });
-  $("btnAnt").addEventListener("click", function () { var i = L.levantamentos.indexOf(atual); if (i > 0) ir(L.levantamentos[i - 1].chave); });
-  $("btnProx").addEventListener("click", function () { var i = L.levantamentos.indexOf(atual); if (i < L.levantamentos.length - 1) ir(L.levantamentos[i + 1].chave); });
   $("btnExcel").addEventListener("click", function () { L.baixarExcel(atual); });
   $("btnImprimir").addEventListener("click", function () { window.print(); });
   document.addEventListener("lira:tema", render);
