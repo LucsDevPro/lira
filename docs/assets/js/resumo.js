@@ -6,7 +6,7 @@
 
   var param = new URLSearchParams(location.search).get("id");
   var atual = L.porChave(param) || L.principal().lev;
-  var blobAtual = null;
+  var blobAtual = null, tam = "completo", fmt = "status";
 
   function seletor() { L.seletorMeses($("meses"), atual, ir); }
   function aviso(id, msg) {
@@ -33,11 +33,13 @@
         "O resumo e a imagem são gerados automaticamente assim que o levantamento for coletado.<br>" + esc(atual.semana_exibicao.rotulo) + "</div></div>";
       return;
     }
-    var t = R.texto(atual);
+    var t = R.texto(atual, undefined, tam === "curto");
     $("textoZap").value = t;
     $("previa").innerHTML = R.textoHtml(t);
     atualizarLinkZap();
-    R.desenharImagem($("cvImagem"), atual).then(function () { $("cvImagem").dataset.pronto = atual.chave; });
+    $("cvImagem").dataset.pronto = "";
+    R.desenharImagem($("cvImagem"), atual, undefined, fmt).then(function () { $("cvImagem").dataset.pronto = atual.chave; });
+    $("subImg").textContent = fmt === "quadrada" ? "Formato quadrado 1080 × 1080, ideal para feed, grupos e conversas." : "Formato vertical 1080 × 1920, ideal para Status do WhatsApp e Instagram.";
   }
 
   $("textoZap").addEventListener("input", function () { $("previa").innerHTML = R.textoHtml(this.value); atualizarLinkZap(); });
@@ -50,7 +52,7 @@
   function gerarBlob(cb) { $("cvImagem").toBlob(cb, "image/png"); }
   $("btnBaixar").addEventListener("click", function () {
     gerarBlob(function (b) {
-      var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = R.nomeArquivo(atual, "status") + ".png";
+      var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = R.nomeArquivo(atual, fmt === "quadrada" ? "quadrada" : "status") + ".png";
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
       aviso("fbImg", "Imagem baixada!");
     });
@@ -59,11 +61,23 @@
     $("btnCompartilhar").hidden = false;
     $("btnCompartilhar").addEventListener("click", function () {
       gerarBlob(function (b) {
-        var f = new File([b], R.nomeArquivo(atual, "status") + ".png", { type: "image/png" });
+        var f = new File([b], R.nomeArquivo(atual, fmt === "quadrada" ? "quadrada" : "status") + ".png", { type: "image/png" });
         if (navigator.canShare({ files: [f] })) navigator.share({ files: [f], text: $("textoZap").value }).catch(function () {});
         else aviso("fbImg", "Compartilhamento não suportado: use Baixar.");
       });
     });
   }
+  function alternar(id, attr, aplicar) {
+    var box = $(id);
+    Array.prototype.forEach.call(box.querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(box.querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+        aplicar(b.getAttribute(attr)); render();
+      });
+    });
+    if (L.deslizante) L.deslizante(box);
+  }
+  alternar("tamTexto", "data-t", function (v) { tam = v; });
+  alternar("fmtImg", "data-f", function (v) { fmt = v; });
   render();
 })();

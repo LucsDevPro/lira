@@ -162,6 +162,9 @@
   }
 
   function nomeBairro(raw) {
+    var cod = (String(raw || "").match(/^\s*(\d+)\s*-/) || [])[1];
+    var oficial = D.bairros_nomes && cod && D.bairros_nomes[cod];
+    if (oficial) return oficial;            // grafia correta (bairros_nomes.json)
     var s = String(raw || "").replace(/^\s*\d+\s*-\s*/, "").replace(/\s*-?\s*ESTRATO\s*\d+\s*$/i, "").trim();
     var peq = { DE: 1, DA: 1, DO: 1, DOS: 1, DAS: 1, E: 1 };
     var base = s.toLowerCase().split(/\s+/).map(function (w, i) {

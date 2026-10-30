@@ -27,6 +27,7 @@ HISTORY_PATH = os.environ.get("LIRA_HISTORY", os.path.join(DIR_BASE, "data", "hi
 ESTADO_PATH = os.environ.get("LIRA_ESTADO", os.path.join(DIR_BASE, "data", "estado_coleta.json"))
 CONFIG_PATH = os.path.join(DIR_BASE, "config_levantamentos.json")
 REGRAS_PATH = os.path.join(DIR_BASE, "regras_classificacao.json")
+BAIRROS_PATH = os.path.join(DIR_BASE, "bairros_nomes.json")
 OUTPUT_PATH = os.environ.get("LIRA_OUTPUT", os.path.join(DIR_BASE, "docs", "assets", "data", "lira-data.js"))
 
 TZ_MS = timezone(timedelta(hours=-4))
@@ -209,6 +210,7 @@ def montar_dados():
         "automacao": config.get("automacao", {}),
         "home": config.get("home"),
         "regras": regras,
+        "bairros_nomes": carregar(BAIRROS_PATH, {}).get("nomes", {}),
         "levantamentos": lista,
     }
 

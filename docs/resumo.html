@@ -29,6 +29,7 @@
     <section class="card">
       <h2 class="card-titulo">Mensagem de texto</h2>
       <p class="card-sub">Confira e edite se quiser antes de enviar.</p>
+      <div class="alterna" id="tamTexto" role="group" aria-label="Tamanho do texto"><button type="button" data-t="completo" aria-pressed="true">Completo</button><button type="button" data-t="curto" aria-pressed="false">Curto</button></div>
       <div class="zap-previa" id="previa" aria-label="Pré-visualização da mensagem"></div>
       <details class="editar"><summary>Editar o texto antes de enviar</summary>
       <label class="sr-only" for="textoZap">Texto da mensagem</label>
@@ -42,7 +43,8 @@
 
     <section class="card">
       <h2 class="card-titulo">Imagem para o Status</h2>
-      <p class="card-sub">Formato vertical 1080 × 1920, ideal para Status do WhatsApp e Instagram.</p>
+      <p class="card-sub" id="subImg">Formato vertical 1080 × 1920, ideal para Status do WhatsApp e Instagram.</p>
+      <div class="alterna" id="fmtImg" role="group" aria-label="Formato da imagem"><button type="button" data-f="status" aria-pressed="true">Status (vertical)</button><button type="button" data-f="quadrada" aria-pressed="false">Feed e grupos (quadrada)</button></div>
       <div class="img-moldura"><canvas id="cvImagem" role="img" aria-label="Imagem do resumo do LIRAa"></canvas></div>
       <div class="acoes" style="margin-top:14px">
         <button class="btn primario" id="btnBaixar" type="button">Baixar imagem (PNG)</button>

@@ -527,7 +527,7 @@ table.dados td a:hover { color: var(--accent); text-decoration: underline; }
 .zap-previa { background: color-mix(in srgb, #25d366 12%, var(--surface)); border: 1px solid var(--line); border-radius: 16px 16px 16px 4px; padding: 14px 16px; font-size: 14px; line-height: 1.55; color: var(--ink); max-height: 340px; overflow: auto; margin-bottom: 14px; word-break: break-word; }
 .zap-texto { width: 100%; font: inherit; font-size: 13.5px; line-height: 1.5; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); resize: vertical; }
 .img-moldura { display: flex; justify-content: center; background: var(--bg-2, var(--line)); border-radius: 18px; padding: 16px; }
-.img-moldura canvas { width: 100%; max-width: 340px; height: auto; aspect-ratio: 9 / 16; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); background: #fff; }
+.img-moldura canvas { width: 100%; max-width: 340px; height: auto; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); background: #fff; }
 .feedback { font-size: 13px; color: var(--ink-2); align-self: center; }
 .resumo-grade { align-items: start; }
 .editar summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 8px; }

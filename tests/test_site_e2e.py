@@ -135,7 +135,7 @@ def test_detalhes_ordenacao_e_excel(navegador, site_atual):
     page.click("#tabAreas th:has-text('IIP')")
     page.click("#tabAreas th:has-text('IIP')")                                   # desc
     primeiro = texto(page, "#tabAreas tbody tr:first-child")
-    assert "Vila Aurea" in primeiro and "11,76%" in primeiro and "Alto risco" in primeiro
+    assert "Vila Áurea" in primeiro and "11,76%" in primeiro and "Alto risco" in primeiro
     with page.expect_download() as d:
         page.click("#btnExcel")
     assert d.value.suggested_filename == "LIRA_318_319.xlsx"
@@ -162,7 +162,7 @@ def test_dashboard_graficos_e_secoes(navegador, site_atual):
     assert "1.726" in kpis and "24" in kpis and "1,39%" in kpis and "Risco médio" in kpis
     # ranking e criadouros
     assert page.locator("#listaRanking .rank-item").count() == 10
-    assert texto(page, "#listaRanking .rank-item:first-child").startswith("1 Vila Aurea")
+    assert texto(page, "#listaRanking .rank-item:first-child").startswith("1 Vila Áurea")
     assert "Depósito móvel" in texto(page, "#listaCriadouros .criadouro:first-child")     # B é o principal em agosto
     # tabela histórica completa: 4 levantamentos (2 sem dados sinalizados)
     linhas = page.locator("#tabHist tbody tr")
@@ -187,13 +187,13 @@ def test_dashboard_filtros(navegador, site_atual):
     assert "Baixo risco" in texto(page, "#legendas .regua-faixa.atual")
     assert page.locator("#listaRanking .rank-item").count() == 10 and "Estrato 1" in texto(page, "#listaRanking")
 
-    # Bairro: 434 - Vila Aurea (agosto: 4 de 34 = 11,76% -> Alto risco)
+    # Bairro: 434 - Vila Áurea (agosto: 4 de 34 = 11,76% -> Alto risco)
     page.click("#btnLimpar")
     page.select_option("#fBairro", "434")
     page.click("#btnComparar")
     assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [None, 26.32, 11.76, None]
     assert "11,76%" in texto(page, "#kpis") and "Alto risco" in texto(page, "#kpis")
-    assert "Bairro: Vila Aurea" in texto(page, "#chips")
+    assert "Bairro: Vila Áurea" in texto(page, "#chips")
     # remover o filtro pelo chip
     page.click("#chips button")
     assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [None, 5.34, 1.39, None]
@@ -398,3 +398,28 @@ def test_botao_comparar_aplica_so_ao_clicar(navegador, site_atual):
     for c in ["gEvolucao", "gVariacao", "gComp", "gPesq", "gPos"]:
         assert page.evaluate("(id) => { const c = document.getElementById(id); const d = c.getContext('2d').getImageData(0,0,c.width,c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; }", c) > 1000
     assert page.erros == []
+
+
+def test_resumo_imagem_quadrada_e_texto_curto(navegador, site_atual):
+    page = abrir(navegador, site_atual, "resumo.html?id=318-319")
+    longo = page.input_value("#textoZap")
+    page.click("#tamTexto [data-t=curto]")
+    curto = page.input_value("#textoZap")
+    assert 0 < len(curto) < len(longo) * 0.6 and "Bairros com mais focos" in curto and "1,39%" in curto
+    page.click("#fmtImg [data-f=quadrada]")
+    page.wait_for_function("document.getElementById('cvImagem').dataset.pronto")
+    assert page.evaluate("[cvImagem.width, cvImagem.height]") == [1080, 1080]
+    assert page.evaluate("Array.from(cvImagem.getContext('2d').getImageData(900,20,1,1).data).slice(0,3).join()") == "0,43,104"
+    with page.expect_download() as dl:
+        page.click("#btnBaixar")
+    assert "quadrada" in dl.value.suggested_filename
+    assert page.erros == []
+
+
+def test_nomes_oficiais_dos_bairros(navegador, site_atual):
+    page = abrir(navegador, site_atual, "resumo.html?id=318-319")
+    t = page.input_value("#textoZap")
+    assert "Vila Áurea" in t and "Ferroviária" in t and "Independência" in t
+    assert "Vila Aurea" not in t
+    dash = abrir(navegador, site_atual, "dashboard.html")
+    assert "Vila Áurea" in texto(dash, "#ranking")

@@ -81,9 +81,26 @@
   }
 
   // Texto pronto para colar/enviar no WhatsApp (negrito com *...*). Sem emojis.
-  function texto(lev, anterior) {
+  function textoCurto(d, lev) {
+    var c = d.c, l = [];
+    l.push("*LIRAa " + lev.nome + " | Ponta Porã*");
+    l.push("IIP de *" + pct(c.iip, 2) + "*: *" + rotuloFaixa(d.faixa) + "*. De " + L.fmtInt(c.pesq) + " imóveis vistoriados, " + L.fmtInt(c.pos) + " tinham foco do mosquito da dengue.");
+    if (d.variacao) l.push(fraseVariacao(d));
+    if (d.bairros.length) {
+      l.push("*Bairros com mais focos:* " + d.bairros.slice(0, 3).map(function (x) { return x.a.nome + " (" + x.c.pos + ")"; }).join(", ") + ".");
+    }
+    if (d.predominantes.length) {
+      l.push("*Onde o mosquito mais se cria:* " + d.predominantes.map(function (t) { return L.DESC_TIPOS[t.k][0].toLowerCase() + " (" + L.DESC_TIPOS[t.k][1] + ")"; }).join(" e ") + ".");
+    }
+    l.push("Reserve 10 minutos por semana para esvaziar e limpar tudo o que acumula água.");
+    l.push("Prefeitura Municipal de Ponta Porã | Setor de Endemias e Vetores");
+    return l.join("\n");
+  }
+
+  function texto(lev, anterior, curto) {
     var d = dados(lev, anterior);
     if (!d) return "";
+    if (curto) return textoCurto(d, lev);
     var c = d.c, l = [];
     l.push("*LIRAa " + lev.nome + " | Ponta Porã*");
     l.push("Levantamento do mosquito da dengue (" + lev.semana_exibicao.rotulo + ", " + L.fmtPeriodo(lev.periodo) + ")");
@@ -171,7 +188,8 @@
   }
 
   // Desenha a imagem no canvas (1080x1920). Devolve uma Promise.
-  function desenharImagem(canvas, lev, anterior) {
+  function desenharImagem(canvas, lev, anterior, formato) {
+    if (formato === "quadrada") return desenharQuadrada(canvas, lev, anterior);
     var d = dados(lev, anterior);
     if (!d) return Promise.resolve(false);
     var fontes = global.document.fonts ? Promise.all([
@@ -276,6 +294,90 @@
       ctx.fillStyle = COR.marinho; ctx.fillRect(0, H - 120, W, 120);
       txt(ctx, "Prefeitura Municipal de Ponta Porã", W / 2, H - 70, 800, 30, "#ffffff", "center");
       txt(ctx, "Setor de Endemias e Vetores · Fonte: eVisita/PNCD", W / 2, H - 30, 500, 24, "rgba(255,255,255,.75)", "center");
+      return true;
+    });
+  }
+
+
+  // Imagem quadrada 1080x1080 (feed e grupos)
+  function desenharQuadrada(canvas, lev, anterior) {
+    var d = dados(lev, anterior);
+    if (!d) return Promise.resolve(false);
+    var fontes = global.document.fonts ? Promise.all([
+      document.fonts.load("800 80px 'Plus Jakarta Sans'"), document.fonts.load("700 30px 'Plus Jakarta Sans'"), document.fonts.load("500 30px 'Plus Jakarta Sans'")
+    ]).catch(function () {}) : Promise.resolve();
+    return Promise.all([fontes, carregarLogo()]).then(function (r) {
+      var logo = r[1], W = 1080, H = 1080, M = 54;
+      canvas.width = W; canvas.height = H;
+      var ctx = canvas.getContext("2d"), k = COR[d.faixa.id], c = d.c;
+      ctx.fillStyle = COR.fundo; ctx.fillRect(0, 0, W, H);
+      // cabeçalho
+      ctx.fillStyle = COR.marinho; ctx.fillRect(0, 0, W, 170);
+      var tx = M;
+      if (logo) {
+        ctx.fillStyle = COR.branco; rr(ctx, M, 30, 190, 110, 20); ctx.fill();
+        var lw = 160, lh = lw * (logo.height / logo.width); if (lh > 86) { lh = 86; lw = lh * (logo.width / logo.height); }
+        ctx.drawImage(logo, M + (190 - lw) / 2, 30 + (110 - lh) / 2, lw, lh);
+        tx = M + 190 + 30;
+      }
+      txt(ctx, "LIRAa " + lev.nome, tx, 82, 800, 48, "#ffffff");
+      txt(ctx, "Mosquito da dengue em Ponta Porã", tx, 120, 500, 27, "rgba(255,255,255,.85)");
+      txt(ctx, lev.semana_exibicao.rotulo + " · " + L.fmtPeriodo(lev.periodo), tx, 154, 500, 23, "rgba(255,255,255,.7)");
+
+      // cartão do resultado (esquerda)
+      var y = 200, h1 = 400;
+      ctx.fillStyle = COR.branco; rr(ctx, M, y, W - 2 * M, h1, 32); ctx.fill();
+      txt(ctx, "Índice de Infestação Predial (IIP)", M + 40, y + 62, 700, 28, COR.ink2);
+      txt(ctx, pct(c.iip, 2), M + 40, y + 200, 800, 150, COR.ink);
+      var rot = d.faixa.id === "alto" ? d.faixa.rotulo : d.faixa.rotulo + " · " + d.faixa.nome_oficial;
+      ctx.font = "700 30px " + FONTE; var sw = ctx.measureText(rot).width + 62;
+      ctx.fillStyle = k.bg; rr(ctx, M + 40, y + 226, sw, 56, 28); ctx.fill();
+      ctx.fillStyle = k.cor; ctx.beginPath(); ctx.arc(M + 40 + 30, y + 226 + 28, 10, 0, Math.PI * 2); ctx.fill();
+      txt(ctx, rot, M + 40 + 52, y + 226 + 38, 700, 30, k.ink);
+      if (d.variacao) {
+        var v = d.variacao.abs, igual = Math.abs(v) < 0.005, cor = igual ? COR.muted : (v < 0 ? COR.baixo.ink : COR.alto.ink);
+        var tv = igual ? "igual a " + d.anterior.nome : L.fmtDec(Math.abs(v), 2) + " pontos";
+        txt(ctx, tv, W - M - 40, y + 118, 800, 34, cor, "right");
+        if (!igual) { ctx.font = "800 34px " + FONTE; seta(ctx, W - M - 40 - ctx.measureText(tv).width - 26, y + 106, 12, v > 0, cor); }
+        if (!igual) txt(ctx, "vs. " + d.anterior.nome, W - M - 40, y + 154, 500, 24, COR.muted, "right");
+      }
+      paragrafo(ctx, L.fmtInt(c.pesq) + " imóveis vistoriados, " + L.fmtInt(c.pos) + " com foco do mosquito.", M + 40, y + 332, W - 2 * M - 80, 500, 28, COR.ink2, 38, 2);
+
+      // bairros (esquerda) e criadouro (direita)
+      y = 632; var h2 = 330, colW = (W - 2 * M - 24) / 2;
+      ctx.fillStyle = COR.branco; rr(ctx, M, y, colW, h2, 28); ctx.fill();
+      txt(ctx, "Bairros com mais focos", M + 32, y + 56, 800, 29, COR.ink);
+      var top = d.bairros.slice(0, 3);
+      if (!top.length) txt(ctx, "Nenhum bairro com foco.", M + 32, y + 120, 500, 26, COR.ink2);
+      top.forEach(function (x, i) {
+        var ry = y + 86 + i * 78;
+        txt(ctx, String(i + 1), M + 32, ry + 44, 800, 28, COR.muted);
+        var tam = 27, nm = x.a.nome, disp = colW - 66 - 28 - 150;
+        ctx.font = "700 " + tam + "px " + FONTE;
+        while (tam > 20 && ctx.measureText(nm).width > disp) { tam -= 1; ctx.font = "700 " + tam + "px " + FONTE; }
+        while (nm.length > 4 && ctx.measureText(nm).width > disp) { nm = nm.slice(0, -2) + "…"; }
+        txt(ctx, nm, M + 66, ry + 44, 700, tam, COR.ink);
+        txt(ctx, x.c.pos + (x.c.pos === 1 ? " imóvel" : " imóveis"), M + colW - 28, ry + 44, 800, 25, COR.marinho, "right");
+        ctx.fillStyle = COR.linha; ctx.fillRect(M + 32, ry + 62, colW - 60, 2);
+      });
+      var x2 = M + colW + 24;
+      ctx.fillStyle = COR.marinho; rr(ctx, x2, y, colW, h2, 28); ctx.fill();
+      txt(ctx, "Onde o mosquito mais se cria", x2 + 32, y + 56, 700, 26, "rgba(255,255,255,.8)");
+      if (d.predominantes.length) {
+        var p0 = d.predominantes[0], emp = d.predominantes.length > 1;
+        ctx.fillStyle = "#ffffff"; rr(ctx, x2 + 32, y + 86, 96, 96, 22); ctx.fill();
+        txt(ctx, emp ? d.predominantes.map(function (t) { return t.k; }).join("+") : p0.k, x2 + 80, y + 150, 800, emp ? 30 : 52, COR.marinho, "center");
+        var nome = emp ? d.predominantes.map(function (t) { return L.DESC_TIPOS[t.k][0]; }).join(" e ") : L.DESC_TIPOS[p0.k][0];
+        paragrafo(ctx, nome, x2 + 148, y + 118, colW - 176, 800, 31, "#ffffff", 36, 2);
+        txt(ctx, p0.v + " de " + d.somaDepositos + " depósitos (" + pct(p0.pct, 0) + ")", x2 + 32, y + 232, 700, 26, "#ffffff");
+        paragrafo(ctx, emp ? "Empate entre os tipos mais comuns." : L.DESC_TIPOS[p0.k][1], x2 + 32, y + 272, colW - 64, 500, 23, "rgba(255,255,255,.8)", 30, 2);
+      } else {
+        txt(ctx, "Nenhum depósito com larvas.", x2 + 32, y + 130, 500, 26, "#ffffff");
+      }
+      // rodapé
+      ctx.fillStyle = COR.marinho; ctx.fillRect(0, H - 90, W, 90);
+      txt(ctx, "Prefeitura Municipal de Ponta Porã", W / 2, H - 50, 800, 26, "#ffffff", "center");
+      txt(ctx, "Setor de Endemias e Vetores · Fonte: eVisita/PNCD", W / 2, H - 20, 500, 21, "rgba(255,255,255,.75)", "center");
       return true;
     });
   }
