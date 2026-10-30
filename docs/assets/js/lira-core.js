@@ -428,8 +428,14 @@
     var el = document.getElementById(id);
     if (!el || !global.Chart) return null;
     if (instancias[id]) instancias[id].destroy();
-    instancias[id] = new Chart(el, config);
-    return instancias[id];
+    config.options = config.options || {};
+    if (instancias[id] === undefined && !config.options.animation) { /* primeira vez: animação padrão */ }
+    else config.options.animation = false;                      // redesenho: sem animação (evita quadro em branco)
+    var g = new Chart(el, config);
+    instancias[id] = g;
+    // garante o tamanho correto depois que o layout assentar
+    requestAnimationFrame(function () { try { if (instancias[id] === g) { g.resize(); g.update("none"); } } catch (e) { /* ok */ } });
+    return g;
   }
   function destruirGrafico(id) { if (instancias[id]) { instancias[id].destroy(); delete instancias[id]; } }
 

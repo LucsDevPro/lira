@@ -50,6 +50,12 @@
     $("fBairro").innerHTML = h;
   }
 
+  function montarComp(vis, focoChave) {
+    if (S.comp === focoChave) S.comp = "auto";
+    $("fComp").innerHTML = opt("auto", "Automático (levantamento anterior)", S.comp === "auto") + opt("none", "Nenhum", S.comp === "none") +
+      vis.filter(function (l) { return l.chave !== focoChave; }).reverse().map(function (l) { return opt(l.chave, l.nome, S.comp === l.chave); }).join("");
+  }
+
   /* ---------- filtro ---------- */
   function noFiltro() { return true; }   // sem filtro de período: o mês escolhido já define o levantamento
   function F() { return { estrato: S.estrato || null, codigo: S.bairro || null }; }
@@ -127,9 +133,15 @@
         if (!comp && S.comp !== "auto" && S.comp !== "none") { S.comp = "auto"; comp = vis[idx - 1] || null; }
       }
       $("fFoco").innerHTML = vis.slice().reverse().map(function (l) { return opt(l.chave, l.nome + " · " + l.semana_exibicao.rotulo, l === foco); }).join("");
-      $("fComp").innerHTML = opt("auto", "Automático (levantamento anterior)", S.comp === "auto") + opt("none", "Nenhum", S.comp === "none") +
-        vis.filter(function (l) { return l !== foco; }).reverse().map(function (l) { return opt(l.chave, l.nome, S.comp === l.chave); }).join("");
-      renderPainel(vis, foco, comp, f, visTodos);
+      montarComp(vis, foco.chave);
+      try {
+        renderPainel(vis, foco, comp, f, visTodos);
+        $("erroPainel").hidden = true;
+      } catch (e) {
+        if (window.console) console.error("Erro ao montar o painel:", e);
+        $("erroPainel").hidden = false;
+        $("erroPainel").querySelector("code").textContent = (e && e.message) || String(e);
+      }
     } else {
       $("fFoco").innerHTML = opt("", "—"); $("fComp").innerHTML = opt("", "—");
     }
@@ -351,17 +363,23 @@
   }
 
   /* ---------- eventos ---------- */
+  /* As escolhas só são aplicadas ao clicar em "Comparar" (ou Enter): evita redesenhar a cada seleção. */
+  function marcarPendente(sim) {
+    $("btnComparar").classList.toggle("pendente", !!sim);
+  }
   ["fFoco", "fComp", "fEstrato", "fBairro"].forEach(function (id) {
     $(id).addEventListener("change", function () {
-      if (id === "fFoco") S.foco = $("fFoco").value;
+      if (id === "fFoco") { S.foco = $("fFoco").value; montarComp(ALL.filter(function (l) { return l.status === "com_dados"; }), S.foco); }
       if (id === "fComp") S.comp = $("fComp").value;
-      if (id === "fEstrato") S.bairro = "", $("fBairro").value = "";
-      atualizar();
+      if (id === "fEstrato") { $("fBairro").value = ""; S.estrato = $("fEstrato").value; S.bairro = ""; montarBairros(); }
+      marcarPendente(true);
     });
+    $(id).addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); $("btnComparar").click(); } });
   });
+  $("btnComparar").addEventListener("click", function () { marcarPendente(false); atualizar(); });
   $("btnLimpar").addEventListener("click", function () {
     ["fEstrato", "fBairro"].forEach(function (id) { $(id).value = ""; });
-    S.foco = ""; S.comp = "auto"; S.bairro = ""; atualizar();
+    S.foco = ""; S.comp = "auto"; S.bairro = ""; marcarPendente(false); atualizar();
   });
   $("rTop").addEventListener("click", function () { S.todos = false; atualizar(); });
   $("rTodos").addEventListener("click", function () { S.todos = true; atualizar(); });

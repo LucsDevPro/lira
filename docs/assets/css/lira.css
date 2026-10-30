@@ -589,3 +589,15 @@ table.comp .pct { color: var(--muted); }
 
 /* Tabela histórica: cabeçalho fixo e rolagem suave */
 .tabela-scroll { scrollbar-width: thin; }
+
+/* ---- Botão Comparar ---- */
+.campo-botoes { justify-content: flex-end; }
+.botoes-filtro { display: flex; gap: 8px; }
+#btnComparar { min-width: 112px; transition: box-shadow .2s, transform .2s; }
+#btnComparar.pendente { box-shadow: 0 0 0 4px color-mix(in srgb, var(--azul, #007eca) 28%, transparent); animation: pulsaBtn 1.6s ease-in-out infinite; }
+@keyframes pulsaBtn { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--azul, #007eca) 12%, transparent); } }
+@media (prefers-reduced-motion: reduce) { #btnComparar.pendente { animation: none; } }
+@media (max-width: 560px) { .botoes-filtro .btn { flex: 1; } }
+.secao { scroll-margin-top: 150px; }
+@media (max-width: 760px) { .secao { scroll-margin-top: 120px; } }
+.subnav { background: var(--bg, #f4f6f9); -webkit-backdrop-filter: none; backdrop-filter: none; }

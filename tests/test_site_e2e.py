@@ -181,6 +181,7 @@ def test_dashboard_filtros(navegador, site_atual):
 
     # Estrato 1: IIP 0,88% (agosto) / 7,59% (maio)
     page.select_option("#fEstrato", "Estrato 1")
+    page.click("#btnComparar")
     assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [None, 7.59, 0.88, None]
     assert "0,88%" in texto(page, "#kpis") and "Baixo risco" in texto(page, "#kpis")
     assert "Baixo risco" in texto(page, "#legendas .regua-faixa.atual")
@@ -189,6 +190,7 @@ def test_dashboard_filtros(navegador, site_atual):
     # Bairro: 434 - Vila Aurea (agosto: 4 de 34 = 11,76% -> Alto risco)
     page.click("#btnLimpar")
     page.select_option("#fBairro", "434")
+    page.click("#btnComparar")
     assert page.evaluate("Chart.getChart('gEvolucao').data.datasets[0].data") == [None, 26.32, 11.76, None]
     assert "11,76%" in texto(page, "#kpis") and "Alto risco" in texto(page, "#kpis")
     assert "Bairro: Vila Aurea" in texto(page, "#chips")
@@ -198,8 +200,10 @@ def test_dashboard_filtros(navegador, site_atual):
 
     # trocar levantamento em foco e comparação
     page.select_option("#fFoco", "307-308")
+    page.click("#btnComparar")
     assert "5,34%" in texto(page, "#kpis") and "Alto risco" in texto(page, "#kpis")
     page.select_option("#fComp", "none")
+    page.click("#btnComparar")
     assert "vs" not in texto(page, "#kpis").lower()
     assert page.erros == []
 
@@ -214,6 +218,7 @@ def test_dashboard_tabela_historica_ordena_e_abas(navegador, site_atual):
     assert page.locator("#tabHist tbody tr").count() == 49                        # município + 48 bairros
     assert "Município (total geral)" in texto(page, "#tabHist tbody tr:first-child")
     page.select_option("#fEstrato", "Estrato 2")
+    page.click("#btnComparar")
     assert page.locator("#tabHist tbody tr").count() == 13                        # município + 12 (inclui Santa Izabel)
     with page.expect_download() as d:
         page.click("#btnCsv")
@@ -376,3 +381,20 @@ def test_botoes_de_mes_e_sem_ciclo_no_site(navegador, site_atual):
     assert "iclo" not in texto(dash, "main")
     pg = abrir(navegador, site_atual, "levantamento.html?id=331-332")
     assert "iclo" not in texto(pg, "main")
+
+
+def test_botao_comparar_aplica_so_ao_clicar(navegador, site_atual):
+    page = abrir(navegador, site_atual, "dashboard.html")
+    antes = page.evaluate("Chart.getChart('gComp').data.datasets.length")
+    page.select_option("#fComp", "none")
+    assert "pendente" in page.get_attribute("#btnComparar", "class")               # destaca o botão
+    assert page.evaluate("Chart.getChart('gComp') !== undefined && Chart.getChart('gComp').data.datasets.length") == antes   # ainda não aplicou
+    page.click("#btnComparar")
+    assert "pendente" not in (page.get_attribute("#btnComparar", "class") or "")
+    page.select_option("#fFoco", "307-308"); page.select_option("#fComp", "318-319"); page.click("#btnComparar")
+    page.wait_for_timeout(500)
+    assert page.evaluate("Chart.getChart('gPesq').data.datasets[0].data") == [1648, 1726]
+    # todos os gráficos desenhados (não ficam em branco)
+    for c in ["gEvolucao", "gVariacao", "gComp", "gPesq", "gPos"]:
+        assert page.evaluate("(id) => { const c = document.getElementById(id); const d = c.getContext('2d').getImageData(0,0,c.width,c.height).data; let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++; return n; }", c) > 1000
+    assert page.erros == []

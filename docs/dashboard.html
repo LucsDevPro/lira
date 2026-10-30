@@ -6,7 +6,7 @@
 <title>Dashboard — Comparação dos LIRAa · Ponta Porã</title>
 <meta name="description" content="Histórico e comparação dos LIRAa de Ponta Porã: evolução do IIP e do IB, variação entre levantamentos, ranking de bairros e principais criadouros.">
 <link rel="icon" href="assets/logo_pmpp.png">
-<link rel="stylesheet" href="assets/css/lira.css">
+<link rel="stylesheet" href="assets/css/lira.css?v=20261029">
 </head>
 <body>
 <div id="site-header"></div>
@@ -30,7 +30,7 @@
       <div class="campo"><label for="fComp">Comparar com</label><select id="fComp"></select></div>
       <div class="campo"><label for="fEstrato">Estrato</label><select id="fEstrato"></select></div>
       <div class="campo"><label for="fBairro">Bairro</label><select id="fBairro"></select></div>
-      <div class="campo" style="justify-content:flex-end"><button class="btn" id="btnLimpar" type="button">Limpar filtros</button></div>
+      <div class="campo campo-botoes"><div class="botoes-filtro"><button class="btn primario" id="btnComparar" type="button">Comparar</button><button class="btn" id="btnLimpar" type="button">Limpar</button></div></div>
     </div>
     <div class="filtros-rodape">
       <div class="chips" id="chips" aria-live="polite"></div>
@@ -47,6 +47,8 @@
   <div id="semResultado" hidden class="secao">
     <div class="card"><div class="vazio"><strong>Nenhum levantamento com dados neste filtro</strong>Amplie o período ou limpe os filtros.</div></div>
   </div>
+
+  <div id="erroPainel" class="aviso" role="alert" hidden><div><strong>Não foi possível desenhar parte do painel.</strong> Atualize a página (Ctrl+F5). Se continuar, envie esta mensagem ao suporte: <code></code></div></div>
 
   <div id="painel">
     <section class="secao" id="sResumo" aria-labelledby="tResumo">
@@ -140,9 +142,9 @@
 <div id="site-footer"></div>
 
 <script src="assets/data/lira-data.js"></script>
-<script src="assets/vendor/chart.umd.min.js"></script>
-<script src="assets/js/lira-core.js"></script>
-<script src="assets/js/lira-widgets.js"></script>
-<script src="assets/js/dashboard.js"></script>
+<script src="assets/vendor/chart.umd.min.js?v=20261029"></script>
+<script src="assets/js/lira-core.js?v=20261029"></script>
+<script src="assets/js/lira-widgets.js?v=20261029"></script>
+<script src="assets/js/dashboard.js?v=20261029"></script>
 </body>
 </html>
