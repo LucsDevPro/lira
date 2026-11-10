@@ -286,15 +286,22 @@
       txt(ctx, lev.semana_exibicao.rotulo + " · " + L.fmtPeriodo(lev.periodo), tx, hy + 122, 500, 25, TEMA.texto2);
 
       /* painel principal: medidor + índice */
-      var py = 330, ph = 580, cx = W / 2, cy = py + 318, R = 250, E = 40;
+      var py = 316, ph = 608, cx = W / 2, cy = py + 318, R = 250, E = 40;
       vidro(ctx, M, py, IW, ph, 44);
       medidor(ctx, cx, cy, R, E, c.iip, d.faixa.id);
       var num = cabe(ctx, pct(c.iip, 2), 372, 800, 132, 84);
       txt(ctx, num.s, cx, cy - 12, 800, num.t, TEMA.texto, "center");
       txt(ctx, "dos imóveis visitados tinham foco do mosquito", cx, cy + 66, 500, 27, TEMA.texto2, "center");
+      // "na prática": o mesmo número em linguagem do dia a dia (igual ao texto do WhatsApp)
+      var pre = "Na prática: ", fra = fraseCada100(c.iip) + ".";
+      var pf = cabe(ctx, pre + fra, IW - 90, 700, 29, 22);
+      ctx.font = "700 " + pf.t + "px " + FONTE;
+      var wpre = ctx.measureText(pre).width, wfra = ctx.measureText(fra).width, xp = cx - (wpre + wfra) / 2;
+      txt(ctx, pre, xp, cy + 114, 700, pf.t, k.cor);
+      txt(ctx, fra, xp + wpre, cy + 114, 700, pf.t, TEMA.texto);
       // selo da faixa
       var rot = d.faixa.id === "alto" ? d.faixa.rotulo : d.faixa.rotulo + " · " + d.faixa.nome_oficial;
-      ctx.font = "800 32px " + FONTE; var sw = ctx.measureText(rot).width + 84, sx = cx - sw / 2, sy = cy + 104;
+      ctx.font = "800 32px " + FONTE; var sw = ctx.measureText(rot).width + 84, sx = cx - sw / 2, sy = cy + 142;
       ctx.fillStyle = "rgba(" + k.rgb + ",.16)"; rr(ctx, sx, sy, sw, 64, 32); ctx.fill();
       ctx.strokeStyle = "rgba(" + k.rgb + ",.55)"; ctx.lineWidth = 2; rr(ctx, sx, sy, sw, 64, 32); ctx.stroke();
       ctx.fillStyle = k.cor; ctx.beginPath(); ctx.arc(sx + 36, sy + 32, 10, 0, Math.PI * 2); ctx.fill();
@@ -306,12 +313,12 @@
         var fv = cabe(ctx, tv, IW - 120, 700, 27, 20);
         ctx.font = "700 " + fv.t + "px " + FONTE;
         var wv = ctx.measureText(fv.s).width, off = igual ? 0 : 20, x0 = cx - (wv + off) / 2;
-        if (!igual) seta(ctx, x0 + 7, cy + 230, 9, v > 0, cor);
-        txt(ctx, fv.s, x0 + off, cy + 238, 700, fv.t, cor);
+        if (!igual) seta(ctx, x0 + 7, cy + 266, 9, v > 0, cor);
+        txt(ctx, fv.s, x0 + off, cy + 274, 700, fv.t, cor);
       }
 
       /* três números-chave */
-      var sy2 = 940, sh = 120, gap = 20, tw = (IW - 2 * gap) / 3;
+      var sy2 = 948, sh = 120, gap = 20, tw = (IW - 2 * gap) / 3;
       [[L.fmtInt(c.pesq), "imóveis vistoriados"], [L.fmtInt(c.pos), "com foco do mosquito"], [String(d.totalBairrosComFoco), plural(d.totalBairrosComFoco, "bairro com foco", "bairros com foco")]].forEach(function (it, i) {
         var x = M + i * (tw + gap);
         vidro(ctx, x, sy2, tw, sh, 28);
@@ -320,7 +327,7 @@
       });
 
       /* bairros com mais focos */
-      var by = 1090, bh = 302, top = d.bairros.slice(0, 4), max = top.length ? top[0].c.pos : 1;
+      var by = 1092, bh = 302, top = d.bairros.slice(0, 4), max = top.length ? top[0].c.pos : 1;
       vidro(ctx, M, by, IW, bh, 36);
       txt(ctx, "Bairros com mais focos", M + 40, by + 62, 800, 33, TEMA.texto);
       if (!top.length) txt(ctx, "Nenhum bairro teve foco neste levantamento.", M + 40, by + 160, 500, 29, TEMA.texto2);

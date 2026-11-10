@@ -363,7 +363,7 @@ def test_resumo_texto_e_imagem_por_levantamento(navegador, site_atual):
     assert page.evaluate("[cvImagem.width, cvImagem.height]") == [1080, 1920]
     # imagem não está em branco: fundo escuro nos cantos e texto branco (o índice) no painel principal
     assert page.evaluate("Math.max(...Array.from(cvImagem.getContext('2d').getImageData(20,20,1,1).data).slice(0,3))") < 90
-    assert page.evaluate("""(() => { const d = cvImagem.getContext('2d').getImageData(72, 330, 936, 580).data; let n = 0;
+    assert page.evaluate("""(() => { const d = cvImagem.getContext('2d').getImageData(72, 316, 936, 608).data; let n = 0;
         for (let i = 0; i < d.length; i += 4) if (d[i] > 235 && d[i+1] > 235 && d[i+2] > 235) n++; return n; })()""") > 3000
     with page.expect_download() as dl:
         page.click("#btnBaixar")
