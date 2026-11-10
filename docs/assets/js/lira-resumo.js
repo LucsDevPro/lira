@@ -318,26 +318,26 @@
       }
 
       /* três números-chave */
-      var sy2 = 948, sh = 120, gap = 20, tw = (IW - 2 * gap) / 3;
+      var sy2 = 944, sh = 108, gap = 20, tw = (IW - 2 * gap) / 3;
       [[L.fmtInt(c.pesq), "imóveis vistoriados"], [L.fmtInt(c.pos), "com foco do mosquito"], [String(d.totalBairrosComFoco), plural(d.totalBairrosComFoco, "bairro com foco", "bairros com foco")]].forEach(function (it, i) {
         var x = M + i * (tw + gap);
         vidro(ctx, x, sy2, tw, sh, 28);
-        txt(ctx, it[0], x + tw / 2, sy2 + 60, 800, 50, TEMA.texto, "center");
-        txt(ctx, it[1], x + tw / 2, sy2 + 96, 500, 22, TEMA.texto3, "center");
+        txt(ctx, it[0], x + tw / 2, sy2 + 56, 800, 50, TEMA.texto, "center");
+        txt(ctx, it[1], x + tw / 2, sy2 + 90, 500, 22, TEMA.texto3, "center");
       });
 
       /* bairros com mais focos */
-      var by = 1092, bh = 302, top = d.bairros.slice(0, 4), max = top.length ? top[0].c.pos : 1;
+      var by = 1072, bh = 332, top = d.bairros.slice(0, 5), max = top.length ? top[0].c.pos : 1;
       vidro(ctx, M, by, IW, bh, 36);
-      txt(ctx, "Bairros com mais focos", M + 40, by + 62, 800, 33, TEMA.texto);
-      if (!top.length) txt(ctx, "Nenhum bairro teve foco neste levantamento.", M + 40, by + 160, 500, 29, TEMA.texto2);
+      txt(ctx, "Bairros com mais focos", M + 40, by + 60, 800, 33, TEMA.texto);
+      if (!top.length) txt(ctx, "Nenhum bairro teve foco neste levantamento.", M + 40, by + 170, 500, 29, TEMA.texto2);
       top.forEach(function (x, i) {
-        var ry = by + 92 + i * 52, cyr = ry + 25;
+        var ry = by + 88 + i * 44, cyr = ry + 25;
         ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.beginPath(); ctx.arc(M + 62, cyr, 19, 0, Math.PI * 2); ctx.fill();
         txt(ctx, String(i + 1), M + 62, cyr + 8, 800, 22, TEMA.texto, "center");
-        var nm = cabe(ctx, x.a.nome, 330, 700, 29, 21);
+        var nm = cabe(ctx, x.a.nome, 412, 700, 29, 20);
         txt(ctx, nm.s, M + 100, cyr + 10, 700, nm.t, TEMA.texto);
-        var bx = 520, bw = 280;
+        var bx = 598, bw = 226;
         ctx.fillStyle = "rgba(255,255,255,.12)"; rr(ctx, bx, cyr - 8, bw, 16, 8); ctx.fill();
         var gb = ctx.createLinearGradient(bx, 0, bx + bw, 0); gb.addColorStop(0, "#5fb4ff"); gb.addColorStop(1, "#2a8cff");
         ctx.fillStyle = gb; rr(ctx, bx, cyr - 8, Math.max(16, bw * (x.c.pos / max)), 16, 8); ctx.fill();
@@ -345,7 +345,7 @@
       });
 
       /* onde o mosquito mais se cria + como evitar */
-      var cy2 = 1418, ch = 366;
+      var cy2 = 1424, ch = 358;
       vidro(ctx, M, cy2, IW, ch, 36);
       espaco(ctx, "3px"); txt(ctx, "ONDE O MOSQUITO MAIS SE CRIA", M + 40, cy2 + 52, 700, 20, TEMA.texto3); espaco(ctx, "0px");
       if (d.predominantes.length) {
