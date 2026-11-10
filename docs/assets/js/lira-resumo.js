@@ -377,7 +377,7 @@
   }
 
 
-  // Imagem quadrada 1080x1080 (feed e grupos)
+  // Imagem quadrada 1080x1080 (feed e grupos): mesmo tema escuro do Status, em duas colunas
   function desenharQuadrada(canvas, lev, anterior) {
     var d = dados(lev, anterior);
     if (!d) return Promise.resolve(false);
@@ -385,77 +385,116 @@
       document.fonts.load("800 80px 'Plus Jakarta Sans'"), document.fonts.load("700 30px 'Plus Jakarta Sans'"), document.fonts.load("500 30px 'Plus Jakarta Sans'")
     ]).catch(function () {}) : Promise.resolve();
     return Promise.all([fontes, carregarLogo()]).then(function (r) {
-      var logo = r[1], W = 1080, H = 1080, M = 54;
+      var logo = r[1], W = 1080, H = 1080, M = 48, IW = W - 2 * M, LW = 580, G = 20, RW = IW - LW - G, RX = M + LW + G;
       canvas.width = W; canvas.height = H;
-      var ctx = canvas.getContext("2d"), k = COR[d.faixa.id], c = d.c;
-      ctx.fillStyle = COR.fundo; ctx.fillRect(0, 0, W, H);
-      // cabeçalho
-      ctx.fillStyle = COR.marinho; ctx.fillRect(0, 0, W, 170);
-      var tx = M;
+      var ctx = canvas.getContext("2d"), c = d.c, k = TEMA.faixa[d.faixa.id];
+
+      /* fundo: degradê institucional + brilho na cor da faixa + anéis discretos */
+      var g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, TEMA.fundoTopo); g.addColorStop(.45, TEMA.fundoMeio); g.addColorStop(1, TEMA.fundoBase);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      var g1 = ctx.createRadialGradient(930, 170, 0, 930, 170, 520);
+      g1.addColorStop(0, "rgba(" + k.rgb + ",.26)"); g1.addColorStop(1, "rgba(" + k.rgb + ",0)");
+      ctx.fillStyle = g1; ctx.fillRect(0, 0, W, H);
+      var g2 = ctx.createRadialGradient(100, 980, 0, 100, 980, 560);
+      g2.addColorStop(0, "rgba(0,126,202,.32)"); g2.addColorStop(1, "rgba(0,126,202,0)");
+      ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = "rgba(255,255,255,.05)"; ctx.lineWidth = 2;
+      [200, 320, 440].forEach(function (rad) { ctx.beginPath(); ctx.arc(1010, 70, rad, 0, Math.PI * 2); ctx.stroke(); });
+
+      /* cabeçalho */
+      var hy = 36, tx = M;
       if (logo) {
-        ctx.fillStyle = COR.branco; rr(ctx, M, 30, 190, 110, 20); ctx.fill();
-        var lw = 160, lh = lw * (logo.height / logo.width); if (lh > 86) { lh = 86; lw = lh * (logo.width / logo.height); }
-        ctx.drawImage(logo, M + (190 - lw) / 2, 30 + (110 - lh) / 2, lw, lh);
-        tx = M + 190 + 30;
+        ctx.save(); ctx.shadowColor = "rgba(0,8,30,.38)"; ctx.shadowBlur = 26; ctx.shadowOffsetY = 8;
+        ctx.fillStyle = "#ffffff"; rr(ctx, M, hy, 214, 110, 24); ctx.fill(); ctx.restore();
+        var lw = 176, lh = lw * (logo.height / logo.width); if (lh > 80) { lh = 80; lw = lh * (logo.width / logo.height); }
+        ctx.drawImage(logo, M + (214 - lw) / 2, hy + (110 - lh) / 2, lw, lh);
+        tx = M + 214 + 30;
       }
-      txt(ctx, "LIRAa " + lev.nome, tx, 82, 800, 48, "#ffffff");
-      txt(ctx, "Mosquito da dengue em Ponta Porã", tx, 120, 500, 27, "rgba(255,255,255,.85)");
-      txt(ctx, lev.semana_exibicao.rotulo + " · " + L.fmtPeriodo(lev.periodo), tx, 154, 500, 23, "rgba(255,255,255,.7)");
+      espaco(ctx, "3px"); txt(ctx, "LEVANTAMENTO RÁPIDO · PONTA PORÃ", tx, hy + 26, 700, 16, TEMA.texto3); espaco(ctx, "0px");
+      txt(ctx, "LIRAa " + lev.nome, tx, hy + 72, 800, 48, TEMA.texto);
+      txt(ctx, lev.semana_exibicao.rotulo + " · " + L.fmtPeriodo(lev.periodo), tx, hy + 102, 500, 22, TEMA.texto2);
 
-      // cartão do resultado (esquerda)
-      var y = 200, h1 = 400;
-      ctx.fillStyle = COR.branco; rr(ctx, M, y, W - 2 * M, h1, 32); ctx.fill();
-      txt(ctx, "Índice de Infestação Predial (IIP)", M + 40, y + 62, 700, 28, COR.ink2);
-      txt(ctx, pct(c.iip, 2), M + 40, y + 200, 800, 150, COR.ink);
+      /* linha 1 (esquerda): medidor + índice */
+      var y1 = 170, h1 = 400, gcx = M + LW / 2, gcy = y1 + 222;
+      vidro(ctx, M, y1, LW, h1, 40);
+      medidor(ctx, gcx, gcy, 170, 30, c.iip, d.faixa.id);
+      var num = cabe(ctx, pct(c.iip, 2), 250, 800, 104, 64);
+      txt(ctx, num.s, gcx, gcy - 6, 800, num.t, TEMA.texto, "center");
+      txt(ctx, "dos imóveis visitados tinham foco do mosquito", gcx, gcy + 52, 500, 21, TEMA.texto2, "center");
       var rot = d.faixa.id === "alto" ? d.faixa.rotulo : d.faixa.rotulo + " · " + d.faixa.nome_oficial;
-      ctx.font = "700 30px " + FONTE; var sw = ctx.measureText(rot).width + 62;
-      ctx.fillStyle = k.bg; rr(ctx, M + 40, y + 226, sw, 56, 28); ctx.fill();
-      ctx.fillStyle = k.cor; ctx.beginPath(); ctx.arc(M + 40 + 30, y + 226 + 28, 10, 0, Math.PI * 2); ctx.fill();
-      txt(ctx, rot, M + 40 + 52, y + 226 + 38, 700, 30, k.ink);
+      ctx.font = "800 26px " + FONTE; var sw = ctx.measureText(rot).width + 64, sx = gcx - sw / 2, sy = gcy + 72;
+      ctx.fillStyle = "rgba(" + k.rgb + ",.16)"; rr(ctx, sx, sy, sw, 48, 24); ctx.fill();
+      ctx.strokeStyle = "rgba(" + k.rgb + ",.55)"; ctx.lineWidth = 2; rr(ctx, sx, sy, sw, 48, 24); ctx.stroke();
+      ctx.fillStyle = k.cor; ctx.beginPath(); ctx.arc(sx + 28, sy + 24, 8, 0, Math.PI * 2); ctx.fill();
+      txt(ctx, rot, sx + 46, sy + 33, 800, 26, k.cor);
       if (d.variacao) {
-        var v = d.variacao.abs, igual = Math.abs(v) < 0.005, cor = igual ? COR.muted : (v < 0 ? COR.baixo.ink : COR.alto.ink);
-        var tv = igual ? "igual a " + d.anterior.nome : L.fmtDec(Math.abs(v), 2) + " pontos";
-        txt(ctx, tv, W - M - 40, y + 118, 800, 34, cor, "right");
-        if (!igual) { ctx.font = "800 34px " + FONTE; seta(ctx, W - M - 40 - ctx.measureText(tv).width - 26, y + 106, 12, v > 0, cor); }
-        if (!igual) txt(ctx, "vs. " + d.anterior.nome, W - M - 40, y + 154, 500, 24, COR.muted, "right");
+        var v = d.variacao.abs, igual = Math.abs(v) < 0.005, cor = igual ? TEMA.texto3 : (v < 0 ? TEMA.faixa.baixo.cor : TEMA.faixa.alto.cor);
+        var tv = igual ? "Igual a " + d.anterior.nome : (v < 0 ? "Caiu" : "Subiu") + " de " + pct(d.ca.iip, 2) + " para " + pct(c.iip, 2) + " desde " + d.anterior.nome;
+        var fv = cabe(ctx, tv, LW - 60, 700, 22, 16);
+        ctx.font = "700 " + fv.t + "px " + FONTE;
+        var wv = ctx.measureText(fv.s).width, off = igual ? 0 : 18, x0 = gcx - (wv + off) / 2;
+        if (!igual) seta(ctx, x0 + 6, gcy + 148, 8, v > 0, cor);
+        txt(ctx, fv.s, x0 + off, gcy + 156, 700, fv.t, cor);
       }
-      paragrafo(ctx, L.fmtInt(c.pesq) + " imóveis vistoriados, " + L.fmtInt(c.pos) + " com foco do mosquito.", M + 40, y + 332, W - 2 * M - 80, 500, 28, COR.ink2, 38, 2);
 
-      // bairros (esquerda) e criadouro (direita)
-      y = 632; var h2 = 330, colW = (W - 2 * M - 24) / 2;
-      ctx.fillStyle = COR.branco; rr(ctx, M, y, colW, h2, 28); ctx.fill();
-      txt(ctx, "Bairros com mais focos", M + 32, y + 56, 800, 29, COR.ink);
-      var top = d.bairros.slice(0, 3);
-      if (!top.length) txt(ctx, "Nenhum bairro com foco.", M + 32, y + 120, 500, 26, COR.ink2);
-      top.forEach(function (x, i) {
-        var ry = y + 86 + i * 78;
-        txt(ctx, String(i + 1), M + 32, ry + 44, 800, 28, COR.muted);
-        var tam = 27, nm = x.a.nome, disp = colW - 66 - 28 - 150;
-        ctx.font = "700 " + tam + "px " + FONTE;
-        while (tam > 20 && ctx.measureText(nm).width > disp) { tam -= 1; ctx.font = "700 " + tam + "px " + FONTE; }
-        while (nm.length > 4 && ctx.measureText(nm).width > disp) { nm = nm.slice(0, -2) + "…"; }
-        txt(ctx, nm, M + 66, ry + 44, 700, tam, COR.ink);
-        txt(ctx, x.c.pos + (x.c.pos === 1 ? " imóvel" : " imóveis"), M + colW - 28, ry + 44, 800, 25, COR.marinho, "right");
-        ctx.fillStyle = COR.linha; ctx.fillRect(M + 32, ry + 62, colW - 60, 2);
+      /* linha 1 (direita): "na prática" + números-chave */
+      vidro(ctx, RX, y1, RW, h1, 40);
+      espaco(ctx, "3px"); txt(ctx, "NA PRÁTICA", RX + 28, y1 + 50, 700, 17, k.cor); espaco(ctx, "0px");
+      paragrafo(ctx, maiuscula1(fraseCada100(c.iip)) + ".", RX + 28, y1 + 100, RW - 56, 800, 31, TEMA.texto, 41, 3);
+      ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.fillRect(RX + 28, y1 + 212, RW - 56, 2);
+      [[L.fmtInt(c.pesq), "imóveis vistoriados"], [L.fmtInt(c.pos), "com foco do mosquito"],
+       [String(d.totalBairrosComFoco), plural(d.totalBairrosComFoco, "bairro com foco", "bairros com foco")]].forEach(function (it, i) {
+        var by0 = y1 + 264 + i * 58;
+        txt(ctx, it[1], RX + 28, by0, 500, 21, TEMA.texto3);
+        txt(ctx, it[0], RX + RW - 28, by0 + 2, 800, 34, TEMA.texto, "right");
+        if (i < 2) { ctx.fillStyle = "rgba(255,255,255,.10)"; ctx.fillRect(RX + 28, by0 + 22, RW - 56, 2); }
       });
-      var x2 = M + colW + 24;
-      ctx.fillStyle = COR.marinho; rr(ctx, x2, y, colW, h2, 28); ctx.fill();
-      txt(ctx, "Onde o mosquito mais se cria", x2 + 32, y + 56, 700, 26, "rgba(255,255,255,.8)");
+
+      /* linha 2 (esquerda): top 5 bairros */
+      var y2 = 590, h2 = 412, top = d.bairros.slice(0, 5), max = top.length ? top[0].c.pos : 1;
+      vidro(ctx, M, y2, LW, h2, 36);
+      txt(ctx, "Bairros com mais focos", M + 32, y2 + 54, 800, 29, TEMA.texto);
+      if (!top.length) txt(ctx, "Nenhum bairro teve foco neste levantamento.", M + 32, y2 + 130, 500, 24, TEMA.texto2);
+      top.forEach(function (x, i) {
+        var cyr = y2 + 104 + i * 64, nx = M + 80, fim = M + LW - 32;
+        ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.beginPath(); ctx.arc(M + 48, cyr, 17, 0, Math.PI * 2); ctx.fill();
+        txt(ctx, String(i + 1), M + 48, cyr + 7, 800, 20, TEMA.texto, "center");
+        var nm = cabe(ctx, x.a.nome, 348, 700, 25, 17);
+        txt(ctx, nm.s, nx, cyr + 9, 700, nm.t, TEMA.texto);
+        txt(ctx, x.c.pos + (x.c.pos === 1 ? " imóvel" : " imóveis"), fim, cyr + 9, 800, 23, TEMA.texto, "right");
+        ctx.fillStyle = "rgba(255,255,255,.12)"; rr(ctx, nx, cyr + 20, fim - nx, 10, 5); ctx.fill();
+        var gb = ctx.createLinearGradient(nx, 0, fim, 0); gb.addColorStop(0, "#5fb4ff"); gb.addColorStop(1, "#2a8cff");
+        ctx.fillStyle = gb; rr(ctx, nx, cyr + 20, Math.max(10, (fim - nx) * (x.c.pos / max)), 10, 5); ctx.fill();
+      });
+
+      /* linha 2 (direita): onde o mosquito mais se cria + como evitar */
+      vidro(ctx, RX, y2, RW, h2, 36);
+      espaco(ctx, "2px"); txt(ctx, "ONDE O MOSQUITO MAIS SE CRIA", RX + 28, y2 + 46, 700, 15, TEMA.texto3); espaco(ctx, "0px");
       if (d.predominantes.length) {
         var p0 = d.predominantes[0], emp = d.predominantes.length > 1;
-        ctx.fillStyle = "#ffffff"; rr(ctx, x2 + 32, y + 86, 96, 96, 22); ctx.fill();
-        txt(ctx, emp ? d.predominantes.map(function (t) { return t.k; }).join("+") : p0.k, x2 + 80, y + 150, 800, emp ? 30 : 52, COR.marinho, "center");
+        var gbd = ctx.createLinearGradient(RX + 28, y2 + 68, RX + 112, y2 + 152); gbd.addColorStop(0, "#ffffff"); gbd.addColorStop(1, "#cfe6ff");
+        ctx.fillStyle = gbd; rr(ctx, RX + 28, y2 + 68, 84, 84, 22); ctx.fill();
+        txt(ctx, emp ? d.predominantes.map(function (t) { return t.k; }).join("+") : p0.k, RX + 70, y2 + (emp ? 118 : 125), 800, emp ? 27 : 44, TEMA.fundoMeio, "center");
         var nome = emp ? d.predominantes.map(function (t) { return L.DESC_TIPOS[t.k][0]; }).join(" e ") : L.DESC_TIPOS[p0.k][0];
-        paragrafo(ctx, nome, x2 + 148, y + 118, colW - 176, 800, 31, "#ffffff", 36, 2);
-        txt(ctx, p0.v + " de " + d.somaDepositos + " depósitos (" + pct(p0.pct, 0) + ")", x2 + 32, y + 232, 700, 26, "#ffffff");
-        paragrafo(ctx, emp ? "Empate entre os tipos mais comuns." : L.DESC_TIPOS[p0.k][1], x2 + 32, y + 272, colW - 64, 500, 23, "rgba(255,255,255,.8)", 30, 2);
+        paragrafo(ctx, nome, RX + 130, y2 + (emp ? 88 : 102), RW - 154, 800, emp ? 21 : 27, TEMA.texto, emp ? 25 : 31, emp ? 3 : 2);
+        var det = emp ? "Empate entre os tipos mais comuns" : maiuscula1(L.DESC_TIPOS[p0.k][1]);
+        var dd = cabe(ctx, det, RW - 56, 500, 20, 15);
+        txt(ctx, dd.s, RX + 28, y2 + 186, 500, dd.t, TEMA.texto2);
+        var qt = cabe(ctx, p0.v + " de " + d.somaDepositos + " depósitos com larvas (" + pct(p0.pct, 0) + ")", RW - 56, 700, 21, 15);
+        txt(ctx, qt.s, RX + 28, y2 + 226, 700, qt.t, TEMA.texto);
+        ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.fillRect(RX + 28, y2 + 244, RW - 56, 2);
+        var dica = emp ? "Faça a sua parte: 10 minutos por semana para esvaziar e limpar tudo o que acumula água." : "Como evitar: " + DICAS[p0.k];
+        paragrafo(ctx, dica, RX + 28, y2 + 282, RW - 52, 500, 19, TEMA.texto2, 25, 5);
       } else {
-        txt(ctx, "Nenhum depósito com larvas.", x2 + 32, y + 130, 500, 26, "#ffffff");
+        paragrafo(ctx, "Nenhum depósito com larvas foi encontrado.", RX + 28, y2 + 110, RW - 56, 700, 26, TEMA.texto, 34, 3);
+        paragrafo(ctx, "Faça a sua parte: 10 minutos por semana para esvaziar e limpar tudo o que acumula água.", RX + 28, y2 + 240, RW - 56, 500, 21, TEMA.texto2, 29, 5);
       }
-      // rodapé
-      ctx.fillStyle = COR.marinho; ctx.fillRect(0, H - 90, W, 90);
-      txt(ctx, "Prefeitura Municipal de Ponta Porã", W / 2, H - 50, 800, 26, "#ffffff", "center");
-      txt(ctx, "Setor de Endemias e Vetores · Fonte: eVisita/PNCD", W / 2, H - 20, 500, 21, "rgba(255,255,255,.75)", "center");
+
+      /* rodapé institucional */
+      ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.fillRect(M, 1020, IW, 2);
+      txt(ctx, "Prefeitura Municipal de Ponta Porã", W / 2, 1048, 800, 23, TEMA.texto, "center");
+      txt(ctx, "Setor de Endemias e Vetores · Fonte: eVisita/PNCD", W / 2, 1069, 500, 19, TEMA.texto3, "center");
       return true;
     });
   }
