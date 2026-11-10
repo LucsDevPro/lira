@@ -4564,7 +4564,7 @@
     }
   },
   "331-332": {
-    "gerado_em": "2026-11-09T14:14:26.190650-04:00",
+    "gerado_em": "2026-11-09T23:34:10.989537-04:00",
     "semana_inicio": "331",
     "semana_fim": "332",
     "id_ano": 14,
@@ -4613,14 +4613,14 @@
             "Total_Imoveis_Albopictus": 0
           },
           {
-            "AREA": "AREA_1237",
-            "Tubitos": 0,
-            "Residencia": 0,
-            "Comercio": 0,
-            "TB": 0,
+            "AREA": "401 - EMILIO DIAS BRANDAO - ESTRATO 1",
+            "Tubitos": 3,
+            "Residencia": 20,
+            "Comercio": 2,
+            "TB": 4,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 0,
+            "Total_Imoveis": 26,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -4698,13 +4698,13 @@
           },
           {
             "AREA": "404 - JARDIM DOS ESTADOS - ESTRATO 1",
-            "Tubitos": 0,
-            "Residencia": 1,
-            "Comercio": 1,
-            "TB": 1,
-            "Outros": 0,
+            "Tubitos": 1,
+            "Residencia": 18,
+            "Comercio": 4,
+            "TB": 5,
+            "Outros": 1,
             "PE": 0,
-            "Total_Imoveis": 3,
+            "Total_Imoveis": 28,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -4809,14 +4809,14 @@
             "Total_Imoveis_Albopictus": 0
           },
           {
-            "AREA": "AREA_1417",
-            "Tubitos": 0,
-            "Residencia": 0,
+            "AREA": "408 - PARQUE DE EXPOSICÕES - ESTRATO 1",
+            "Tubitos": 4,
+            "Residencia": 4,
             "Comercio": 0,
             "TB": 0,
             "Outros": 0,
             "PE": 0,
-            "Total_Imoveis": 0,
+            "Total_Imoveis": 4,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -4923,13 +4923,13 @@
         ],
         "total": {
           "AREA": "TOTAL ESTRATO 1",
-          "Tubitos": 17,
-          "Residencia": 157,
-          "Comercio": 14,
-          "TB": 95,
-          "Outros": 13,
+          "Tubitos": 25,
+          "Residencia": 198,
+          "Comercio": 19,
+          "TB": 103,
+          "Outros": 14,
           "PE": 0,
-          "Total_Imoveis": 279,
+          "Total_Imoveis": 334,
           "A1": 0,
           "A2": 0,
           "B": 1,
@@ -4948,7 +4948,7 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 0.36
+          "IIP": 0.3
         }
       },
       "Estrato 2": {
@@ -5778,12 +5778,12 @@
           {
             "AREA": "438 - JARDIM PLANALTO - ESTRATO 4",
             "Tubitos": 0,
-            "Residencia": 10,
-            "Comercio": 0,
-            "TB": 16,
-            "Outros": 5,
+            "Residencia": 17,
+            "Comercio": 2,
+            "TB": 19,
+            "Outros": 6,
             "PE": 0,
-            "Total_Imoveis": 31,
+            "Total_Imoveis": 44,
             "A1": 0,
             "A2": 0,
             "B": 0,
@@ -6031,12 +6031,12 @@
         "total": {
           "AREA": "TOTAL ESTRATO 4",
           "Tubitos": 24,
-          "Residencia": 231,
-          "Comercio": 32,
-          "TB": 135,
-          "Outros": 39,
+          "Residencia": 238,
+          "Comercio": 34,
+          "TB": 138,
+          "Outros": 40,
           "PE": 0,
-          "Total_Imoveis": 437,
+          "Total_Imoveis": 450,
           "A1": 0,
           "A2": 0,
           "B": 3,
@@ -6055,19 +6055,19 @@
           "TB_Albopictus": 0,
           "Outros_Albopictus": 0,
           "Total_Imoveis_Albopictus": 0,
-          "IIP": 1.14
+          "IIP": 1.11
         }
       }
     },
     "total_geral": {
       "AREA": "TOTAL GERAL",
-      "Tubitos": 89,
-      "Residencia": 875,
-      "Comercio": 169,
-      "TB": 422,
-      "Outros": 111,
+      "Tubitos": 97,
+      "Residencia": 923,
+      "Comercio": 176,
+      "TB": 433,
+      "Outros": 113,
       "PE": 0,
-      "Total_Imoveis": 1577,
+      "Total_Imoveis": 1645,
       "A1": 0,
       "A2": 0,
       "B": 7,
@@ -6086,7 +6086,7 @@
       "TB_Albopictus": 0,
       "Outros_Albopictus": 0,
       "Total_Imoveis_Albopictus": 0,
-      "IIP": 0.76
+      "IIP": 0.73
     }
   }
 }
