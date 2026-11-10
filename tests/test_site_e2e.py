@@ -433,7 +433,10 @@ def test_resumo_imagem_quadrada_e_texto_curto(navegador, site_atual):
     page.click("#fmtImg [data-f=quadrada]")
     page.wait_for_function("document.getElementById('cvImagem').dataset.pronto")
     assert page.evaluate("[cvImagem.width, cvImagem.height]") == [1080, 1080]
-    assert page.evaluate("Array.from(cvImagem.getContext('2d').getImageData(900,20,1,1).data).slice(0,3).join()") == "0,43,104"
+    # imagem não está em branco: fundo escuro no canto e texto branco (o índice) no painel do medidor
+    assert page.evaluate("Math.max(...Array.from(cvImagem.getContext('2d').getImageData(10,10,1,1).data).slice(0,3))") < 90
+    assert page.evaluate("""(() => { const d = cvImagem.getContext('2d').getImageData(48, 170, 580, 400).data; let n = 0;
+        for (let i = 0; i < d.length; i += 4) if (d[i] > 235 && d[i+1] > 235 && d[i+2] > 235) n++; return n; })()""") > 2000
     with page.expect_download() as dl:
         page.click("#btnBaixar")
     assert "quadrada" in dl.value.suggested_filename
