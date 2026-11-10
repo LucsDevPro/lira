@@ -12,6 +12,10 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, WebDriverException
 
 from semana_util import (
     par_semanas_epidemiologicas, formatar_ciclo,
@@ -47,6 +51,8 @@ ID_ANO = 14
 DIR_BASE = os.path.dirname(os.path.abspath(__file__))
 CAMINHO_CONFIG = os.path.join(DIR_BASE, "config_levantamentos.json")
 DIR_DADOS = os.environ.get("LIRA_DATA_DIR", os.path.join(DIR_BASE, "data"))
+# Diagnóstico de falha de login: fica FORA de data/ e docs/, que o workflow publica no repositório.
+DIR_EVIDENCIAS = os.path.join(DIR_BASE, "evidencias_login")
 
 # =====================================================
 # ÁREAS - ESTRATO 1
@@ -94,7 +100,6 @@ TZ_MS = timezone(timedelta(hours=-4))
 # =====================================================
 
 def criar_driver():
-
     options = Options()
 
     if HEADLESS:
@@ -103,8 +108,29 @@ def criar_driver():
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-background-networking")
+        options.add_argument("--disable-default-apps")
+        options.add_argument("--disable-sync")
+        options.add_argument("--metrics-recording-only")
+        options.add_argument("--mute-audio")
+        options.add_argument("--no-first-run")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        # Não aguarda imagens/recursos secundários da página.
+        options.page_load_strategy = "eager"
 
-    return webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(options=options)
+
+    # Limita o tempo de espera da comunicação Python <-> ChromeDriver.
+    # Em caso de timeout, a sessão será descartada e recriada.
+    try:
+        driver.command_executor.set_timeout(60)
+    except (AttributeError, TypeError):
+        pass
+
+    driver.set_page_load_timeout(90)
+    driver.set_script_timeout(60)
+    return driver
 
 # =====================================================
 # URL
@@ -133,23 +159,97 @@ def montar_url(area, semana_inicio, semana_fim, id_atividade=ID_ATIVIDADE,
 # LOGIN
 # =====================================================
 
-def fazer_login(driver):
+def _salvar_evidencias_login(driver, motivo):
+    """Salva diagnóstico sem registrar CPF, senha ou valores dos campos."""
+    try:
+        os.makedirs(DIR_EVIDENCIAS, exist_ok=True)
+    except OSError:
+        return
 
+    try:
+        with open(os.path.join(DIR_EVIDENCIAS, "login_falha.txt"), "w", encoding="utf-8") as f:
+            f.write(f"Motivo: {motivo}\n")
+            try:
+                f.write(f"URL: {driver.current_url}\n")
+            except Exception as exc:
+                f.write(f"URL indisponível: {type(exc).__name__}\n")
+            try:
+                f.write(f"Título: {driver.title}\n")
+            except Exception as exc:
+                f.write(f"Título indisponível: {type(exc).__name__}\n")
+    except Exception:
+        pass
+
+    # Comandos isolados: uma sessão travada não impede outras tentativas.
+    try:
+        with open(os.path.join(DIR_EVIDENCIAS, "login_falha.html"), "w", encoding="utf-8") as f:
+            f.write(driver.page_source or "")
+    except Exception:
+        pass
+    # Sem captura de tela de propósito: o campo CPF preenchido apareceria na imagem.
+
+
+def _mensagem_erro_login(driver):
+    """Retorna mensagem visível de credencial inválida, se houver."""
+    try:
+        texto = (driver.find_element(By.TAG_NAME, "body").text or "").lower()
+    except Exception:
+        return None
+
+    indicadores = (
+        "usuário ou senha inválidos", "usuario ou senha invalidos",
+        "cpf ou senha inválidos", "cpf ou senha invalidos",
+        "credenciais inválidas", "credenciais invalidas",
+        "acesso não autorizado", "acesso nao autorizado",
+    )
+    return next((item for item in indicadores if item in texto), None)
+
+
+def fazer_login(driver):
     if not USUARIO or not SENHA:
         raise RuntimeError(
             "Credenciais não encontradas. Defina as variáveis de ambiente "
             "LIRA_USUARIO e LIRA_SENHA (no GitHub, como Secrets do repositório)."
         )
 
-    driver.get(URL_BASE)
+    try:
+        driver.get(URL_BASE)
+        wait = WebDriverWait(driver, 30)
+        cpf = wait.until(EC.visibility_of_element_located((By.NAME, "cpf")))
+        senha = wait.until(EC.visibility_of_element_located((By.NAME, "password")))
+        botao = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
 
-    time.sleep(2)
+        cpf.clear()
+        cpf.send_keys(USUARIO)
+        senha.clear()
+        senha.send_keys(SENHA)
+        driver.execute_script("arguments[0].click();", botao)
 
-    driver.find_element("name", "cpf").send_keys(USUARIO)
-    driver.find_element("name", "password").send_keys(SENHA)
-    driver.find_element("css selector", "button[type='submit']").click()
+        def autenticacao_concluida(d):
+            erro = _mensagem_erro_login(d)
+            if erro:
+                raise RuntimeError(f"eVisita recusou a autenticação: {erro}")
+            # A URL pode continuar com /pncd_v2 mesmo depois do login.
+            return not d.find_elements(By.NAME, "cpf") and not d.find_elements(By.NAME, "password")
 
-    time.sleep(3)
+        try:
+            WebDriverWait(driver, 60, poll_frequency=1).until(autenticacao_concluida)
+        except TimeoutException as exc:
+            _salvar_evidencias_login(driver, "Formulário de login permaneceu visível após o envio.")
+            raise TimeoutException(
+                "Não foi possível confirmar a autenticação: o formulário de login "
+                "continuou presente após 60 segundos."
+            ) from exc
+
+        WebDriverWait(driver, 20, poll_frequency=1).until(
+            lambda d: bool((d.find_element(By.TAG_NAME, "body").text or "").strip())
+        )
+        print("[login] Formulário de autenticação desapareceu; sessão iniciada.")
+    except RuntimeError:
+        raise
+    except (TimeoutException, WebDriverException) as exc:
+        _salvar_evidencias_login(driver, f"{type(exc).__name__}: {exc}")
+        raise
 
 # =====================================================
 # EXTRAÇÃO
@@ -325,8 +425,6 @@ COLUNAS = [
     "Resid_Albopictus", "Comercio_Albopictus", "TB_Albopictus",
     "Outros_Albopictus", "Total_Imoveis_Albopictus",
 ]
-
-
 
 
 # =====================================================
@@ -509,6 +607,53 @@ def salvar_levantamento(alvo, snapshot, dfs, df_total, config, agora):
     return chave
 
 
+def criar_driver_e_fazer_login(criar=None, login=None, tentativas=3):
+    """Repete falhas Selenium transitórias usando uma sessão Chrome limpa."""
+    criar = criar or criar_driver
+    login = login or fazer_login
+    ultimo_erro = None
+
+    for tentativa in range(1, tentativas + 1):
+        driver = None
+        try:
+            print(f"[login] Tentativa {tentativa}/{tentativas}.")
+            driver = criar()
+            login(driver)
+            return driver
+        except RuntimeError:
+            if driver is not None:
+                try:
+                    driver.quit()
+                except Exception:
+                    pass
+            raise
+        except (TimeoutException, WebDriverException) as exc:
+            ultimo_erro = exc
+            if driver is not None:
+                try:
+                    driver.quit()
+                except Exception:
+                    pass
+            if tentativa < tentativas:
+                print(
+                    f"[login] Falha temporária do Selenium ({type(exc).__name__}); "
+                    "descartando a sessão e tentando novamente.", file=sys.stderr
+                )
+                time.sleep(20)
+        except Exception:
+            if driver is not None:
+                try:
+                    driver.quit()
+                except Exception:
+                    pass
+            raise
+
+    raise RuntimeError(
+        f"Login não concluído após {tentativas} tentativas Selenium: "
+        f"{type(ultimo_erro).__name__}: {ultimo_erro}"
+    ) from ultimo_erro
+
+
 # =====================================================
 # EXECUÇÃO
 # =====================================================
@@ -550,10 +695,8 @@ def executar(args, criar=None, login=None, agora=None):
         return 0
 
     erros = 0
-    driver = criar()
+    driver = criar_driver_e_fazer_login(criar=criar, login=login)
     try:
-        login(driver)
-
         for alvo in alvos:
             chave = alvo["chave"]
             try:
@@ -617,6 +760,6 @@ def main(argv=None):
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except Exception as exc:
-        print(f"ERRO: {exc}", file=sys.stderr)
+    except Exception as exp:
+        print(f"ERRO: {exp}", file=sys.stderr)
         raise

@@ -43,18 +43,31 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Rodar scraper (coleta os dados do eVisita)
+        id: scraper
         env:
           LIRA_USUARIO: ${{ secrets.LIRA_USUARIO }}
           LIRA_SENHA: ${{ secrets.LIRA_SENHA }}
           # Execução agendada respeita a janela 03/11–15/11/2026; manual não.
           ARGS_JANELA: ${{ github.event_name == 'schedule' && '--respeitar-janela' || '' }}
           ALVO_FORCADO: ${{ github.event.inputs.alvo }}
+          # Força o Selenium Manager a escolher o ChromeDriver certo (evita mismatch)
+          SE_SKIP_DRIVER_IN_PATH: "true"
         run: |
           if [ -n "$ALVO_FORCADO" ]; then
             python lira_scraper.py --alvo "$ALVO_FORCADO"
           else
             python lira_scraper.py $ARGS_JANELA
           fi
+
+      - name: Upload evidências da falha de login (se houver)
+        if: ${{ always() && steps.scraper.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: login-falha
+          path: |
+            evidencias_login/login_falha.html
+            evidencias_login/login_falha.txt
+          if-no-files-found: ignore
 
       - name: Gerar dados do site
         run: python generate_dashboard.py
