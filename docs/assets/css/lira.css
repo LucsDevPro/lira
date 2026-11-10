@@ -601,3 +601,24 @@ table.comp .pct { color: var(--muted); }
 .secao { scroll-margin-top: 150px; }
 @media (max-width: 760px) { .secao { scroll-margin-top: 120px; } }
 .subnav { background: var(--bg, #f4f6f9); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* ---- Página inicial simplificada (população em geral) ---- */
+.destaque.simples { display: block; }
+.destaque.simples .destaque-info { padding: 32px 32px 22px; }
+.destaque.simples .indice-grande { margin-top: 24px; }
+.destaque.simples .indice-grande .rot { font-size: 15px; }
+.destaque.simples .frase { font-size: 17px; font-weight: 700; margin-top: 14px; max-width: 46ch; }
+.destaque.simples .comparacao, .destaque.simples .contagem { color: var(--ink-2); font-size: 14.5px; margin-top: 10px; }
+.destaque.simples .comparacao .delta { margin-right: 4px; }
+.destaque.simples .destaque-regua { padding: 22px 32px 26px; }
+.regua-trilha.sem-pino { padding-top: 0; }
+.saiba-mais { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 20px; color: var(--ink-2); font-size: 14px; }
+.saiba-mais summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+.saiba-mais[open] summary { margin-bottom: 8px; }
+.saiba-mais p { margin: 6px 0; max-width: 70ch; }
+.mais-detalhes h2 { font-size: 21px; font-weight: 800; letter-spacing: -.025em; }
+.mais-detalhes p { color: var(--muted); font-size: 14px; margin: 4px 0 14px; }
+@media (max-width: 760px) {
+  .destaque.simples .destaque-info { padding: 22px 18px 18px; }
+  .destaque.simples .destaque-regua { padding: 18px; }
+}

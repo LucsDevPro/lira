@@ -6,7 +6,7 @@
 <title>LIRAa — Prefeitura Municipal de Ponta Porã</title>
 <meta name="description" content="Levantamento Rápido de Índices para Aedes aegypti (LIRAa) de Ponta Porã: IIP, IB, classificação de risco e histórico.">
 <link rel="icon" href="assets/logo_pmpp.png">
-<link rel="stylesheet" href="assets/css/lira.css?v=20261029">
+<link rel="stylesheet" href="assets/css/lira.css?v=20261110">
 </head>
 <body>
 <div id="site-header"></div>
@@ -15,52 +15,57 @@
   <div id="avisoFallback"></div>
   <section id="destaque" aria-live="polite"></section>
 
+  <details class="saiba-mais">
+    <summary>O que é o LIRAa e como ler estes números?</summary>
+    <p>O LIRAa é uma pesquisa rápida feita pelos agentes de endemias: eles visitam imóveis da cidade e procuram focos do mosquito <em>Aedes aegypti</em>, que transmite dengue, chikungunya e zika.</p>
+    <p>O número principal desta página é a <strong>porcentagem de imóveis visitados em que foi encontrado foco do mosquito</strong> (o IIP). Quanto menor, melhor.</p>
+  </details>
+
   <section class="secao">
-    <div class="secao-titulo"><h2>Evolução do IIP</h2><a class="link-mais" style="margin:0" href="dashboard.html">Abrir o dashboard completo</a></div>
+    <div class="grid g-2">
+      <div class="card">
+        <h2 class="card-titulo">Bairros com mais focos</h2>
+        <p class="card-sub" id="subRanking"></p>
+        <div id="ranking"></div>
+        <a class="link-mais" href="dashboard.html#ranking">Ver todos os bairros</a>
+      </div>
+      <div class="card">
+        <h2 class="card-titulo">Onde o mosquito mais aparece</h2>
+        <p class="card-sub">Tipos de recipiente em que foram encontrados focos, do mais ao menos frequente.</p>
+        <div id="criadouros"></div>
+        <a class="link-mais" href="dashboard.html#criadouros">Ver histórico completo</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao">
+    <div class="secao-titulo"><h2>Como está mudando</h2><p>Porcentagem de imóveis com focos em cada levantamento. Quanto menor, melhor.</p></div>
     <div class="grid g-3">
       <div class="card span-2">
-        <div class="chart-wrap"><canvas id="gEvolucao" role="img" aria-label="Evolução do IIP nos levantamentos"></canvas></div>
+        <div class="chart-wrap"><canvas id="gEvolucao" role="img" aria-label="Evolução da porcentagem de imóveis com focos nos levantamentos"></canvas></div>
       </div>
       <div class="card" id="boxVariacao"></div>
     </div>
   </section>
 
-  <section class="secao">
-    <div class="secao-titulo"><h2>Por estrato</h2><p id="subEstratos"></p></div>
-    <div class="grid g-4" id="cardsEstratos"></div>
+  <section class="secao mais-detalhes">
+    <h2>Quer ver mais detalhes?</h2>
+    <p>Números técnicos, comparação entre áreas e histórico completo ficam no Dashboard.</p>
+    <div class="acoes"><a class="btn primario" href="dashboard.html">Abrir o Dashboard</a><a class="btn" id="btnDetalhes" href="levantamento.html">Detalhes deste levantamento</a></div>
   </section>
 
-  <section class="secao">
-    <div class="grid g-2">
-      <div class="card">
-        <h3 class="card-titulo">Bairros com maior IIP</h3>
-        <p class="card-sub" id="subRanking"></p>
-        <div id="ranking"></div>
-        <a class="link-mais" href="dashboard.html#ranking">Ver ranking completo</a>
-      </div>
-      <div class="card">
-        <h3 class="card-titulo">Principais criadouros</h3>
-        <p class="card-sub">Tipos de depósito com Aedes aegypti, do mais ao menos frequente.</p>
-        <div id="criadouros"></div>
-        <a class="link-mais" href="dashboard.html#criadouros">Ver histórico por tipo</a>
-      </div>
-    </div>
-  </section>
-
-  <section class="secao">
-    <div class="secao-titulo"><h2>Levantamentos</h2><p>Abra um para ver o detalhe por estrato e bairro.</p></div>
-    <div class="card flush"><div class="lista-lev" id="listaLev"></div></div>
-  </section>
-
-  <div id="avisoAusentes" class="secao"></div>
+  <details class="saiba-mais" id="obsDados" hidden>
+    <summary>Observações sobre os dados</summary>
+    <div id="avisoAusentes"></div>
+  </details>
 </main>
 
 <div id="site-footer"></div>
 
 <script src="assets/data/lira-data.js"></script>
-<script src="assets/vendor/chart.umd.min.js?v=20261029"></script>
-<script src="assets/js/lira-core.js?v=20261029"></script>
-<script src="assets/js/lira-widgets.js?v=20261029"></script>
-<script src="assets/js/home.js?v=20261029"></script>
+<script src="assets/vendor/chart.umd.min.js?v=20261110"></script>
+<script src="assets/js/lira-core.js?v=20261110"></script>
+<script src="assets/js/lira-widgets.js?v=20261110"></script>
+<script src="assets/js/home.js?v=20261110"></script>
 </body>
 </html>

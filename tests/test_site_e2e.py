@@ -42,6 +42,20 @@ def site_com_novembro(tmp_path_factory, site_atual):
 
 
 @pytest.fixture(scope="session")
+def site_sem_novembro(tmp_path_factory, site_atual):
+    """Variante SÓ PARA TESTE: Novembro ainda sem dados (a Home cai para o último levantamento com dados)."""
+    destino = tmp_path_factory.mktemp("site_sem_nov") / "docs"
+    shutil.copytree(site_atual, destino)
+    arq = destino / "assets" / "data" / "lira-data.js"
+    txt = arq.read_text(encoding="utf-8")
+    dados = json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
+    nov = {l["chave"]: l for l in dados["levantamentos"]}["331-332"]
+    nov.update(status="sem_dados", estratos=None, total_geral=None, coletado_em=None, ausentes=["Aguardando coleta de dados."])
+    arq.write_text("window.LIRA_DATA = " + json.dumps(dados, ensure_ascii=False) + ";", encoding="utf-8")
+    return destino
+
+
+@pytest.fixture(scope="session")
 def navegador():
     with pw.sync_playwright() as p:
         b = p.chromium.launch()
@@ -80,26 +94,34 @@ def test_classificacao_js_igual_python(navegador, site_atual):
 
 # ---------------- Home ----------------
 
-def test_home_mostra_1_39_risco_medio_e_legenda_so_do_iip(navegador, site_atual):
-    page = abrir(navegador, site_atual, "index.html")
+def test_home_simples_mostra_1_39_risco_medio_e_faixas(navegador, site_sem_novembro):
+    page = abrir(navegador, site_sem_novembro, "index.html")
     assert page.erros == []
     destaque = texto(page, "#destaque")
     assert "1,39%" in destaque and "Risco médio" in destaque
-    assert re.search(r"IB · Índice de Breteau 1,39", destaque)                   # IB: só o valor
-    assert "Classificação do IB" not in texto(page, "body")                      # sem legenda do IB
-    assert page.locator(".regua").count() == 1
+    assert "Situação de alerta" in destaque                                     # frase em linguagem simples
+    # simplificação: sem IB, sem tubitos/depósitos, sem estratos nem lista de levantamentos na Home
+    corpo = texto(page, "body")
+    for termo in ["Índice de Breteau", "Classificação do IB", "Tubitos", "Depósitos positivos", "Por estrato"]:
+        assert termo not in corpo, termo
+    assert page.locator("#listaLev").count() == 0
     # novembro configurado, mas sem dados: aviso claro e fallback para o último com dados
     assert "Novembro/2026 ainda não tem dados coletados" in texto(page, "#avisoFallback")
+    assert "03:00, 12:00 e 15:30" in texto(page, "#avisoFallback")
     assert "Último levantamento com dados" in destaque
-    # legenda oficial do IIP com limites e destaque na faixa atual
+    # faixas em linguagem simples, com destaque na faixa atual
     leg = texto(page, ".destaque-regua")
-    for t in ["Satisfatório", "abaixo de 1%", "Alerta", "de 1% a 3,9%", "Risco", "acima de 3,9%", "Faixas oficiais"]:
+    for t in ["Baixo risco", "abaixo de 1%", "Risco médio", "de 1% a 3,9%", "Alto risco", "acima de 3,9%", "Ministério da Saúde"]:
         assert t in leg, t
     assert page.locator(".regua-faixa.atual").count() == 1
-    assert "Alerta" in texto(page, ".regua-faixa.atual")
-    assert page.locator("#listaLev a").count() == 4
+    assert "Risco médio" in texto(page, ".regua-faixa.atual")
+    # só os principais: no máximo 5 bairros e 4 criadouros
+    assert 1 <= page.locator("#ranking .rank-item").count() <= 5
+    assert 1 <= page.locator("#criadouros .criadouro").count() <= 4
+    assert "Estrato" not in texto(page, "#ranking")
     assert page.evaluate("!!Chart.getChart('gEvolucao')")
     assert page.evaluate("Chart.getChart('gEvolucao').data.datasets.length") == 1   # Home: só o IIP
+    assert "id=" in page.get_attribute("#btnDetalhes", "href")
 
 
 def test_home_usa_novembro_quando_ha_dados(navegador, site_com_novembro):
@@ -108,9 +130,9 @@ def test_home_usa_novembro_quando_ha_dados(navegador, site_com_novembro):
     assert "LIRAa Novembro/2026" in texto(page, "#destaque")
     assert "Levantamento principal" in texto(page, "#destaque")
     assert texto(page, "#avisoFallback") == ""
-    # IIP 60/1726 = 3,48% (Risco médio); IB 70/1726 = 4,06 (Alto risco)
+    # IIP 60/1726 = 3,48% (Risco médio); o IB (4,06) não aparece mais na Home
     assert re.search(r"3,48%.*Risco médio", texto(page, "#destaque"))
-    assert "4,06" in texto(page, "#destaque")
+    assert "4,06" not in texto(page, "#destaque")
 
 
 # ---------------- Detalhes ----------------

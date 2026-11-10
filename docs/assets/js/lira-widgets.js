@@ -72,24 +72,27 @@
       var cl = L.classificar("iip", it.c.iip);
       var d = it.ant && it.ant.iip != null && it.c.iip != null ? L.variacao(it.c.iip, it.ant.iip) : null;
       return '<li class="rank-item' + (opts.destaque && opts.destaque === it.a.codigo ? " destaque" : "") + '"><span class="rank-pos">' + (i + 1) + "</span>" +
-        '<div class="rank-nome">' + esc(it.a.nome) + "<small>" + esc(it.a.estrato) + " · cód. " + esc(it.a.codigo) + "</small></div>" +
+        '<div class="rank-nome">' + esc(it.a.nome) + (opts.simples ? "" : "<small>" + esc(it.a.estrato) + " · cód. " + esc(it.a.codigo) + "</small>") + "</div>" +
         '<div class="rank-barra" role="img" aria-label="IIP ' + esc(L.fmtPct(it.c.iip)) + '"><i class="' + (opts.limpo ? "" : (cl ? cl.id : "")) + '" style="width:' + Math.max(0, ((it.c.iip || 0) / max) * 100).toFixed(1) + '%"></i></div>' +
         '<div class="rank-valor"><span class="l1"><b>' + esc(L.fmtPct(it.c.iip)) + "</b>" + (opts.limpo ? "" : L.selo("iip", it.c.iip)) + "</span>" +
-        "<small>" + L.fmtInt(it.c.pos) + " positivos em " + L.fmtInt(it.c.pesq) + " pesquisados" + (d ? " · " + L.delta(d, "p.p.") : "") + "</small></div></li>";
+        "<small>" + (opts.simples ? L.fmtInt(it.c.pos) + " de " + L.fmtInt(it.c.pesq) + " imóveis" : L.fmtInt(it.c.pos) + " positivos em " + L.fmtInt(it.c.pesq) + " pesquisados" + (d ? " · " + L.delta(d, "p.p.") : "")) + "</small></div></li>";
     }).join("") + "</ol>";
     return total;
   }
 
   /* ---- principais criadouros ---- */
-  function criadouros(el, c) {
+  function criadouros(el, c, opts) {
+    opts = opts || {};
     if (!c) { el.innerHTML = '<div class="vazio"><strong>Sem dados</strong></div>'; return; }
     var soma = 0, max = 0;
     L.TIPOS.forEach(function (k) { soma += c.tipos[k]; max = Math.max(max, c.tipos[k]); });
     if (!soma) { el.innerHTML = '<div class="vazio"><strong>Nenhum depósito positivo</strong>Não houve depósito com Aedes aegypti neste recorte.</div>'; return; }
     var ordem = L.TIPOS.slice().sort(function (a, b) { return c.tipos[b] - c.tipos[a] || L.TIPOS.indexOf(a) - L.TIPOS.indexOf(b); });
+    if (opts.simples) ordem = ordem.filter(function (k) { return c.tipos[k] > 0; });   // Home: só onde houve foco
+    if (opts.limite) ordem = ordem.slice(0, opts.limite);
     el.innerHTML = ordem.map(function (k, i) {
       var v = c.tipos[k], d = L.DESC_TIPOS[k];
-      return '<div class="criadouro' + (i === 0 && v > 0 ? " lider" : "") + '"><span class="cod">' + k + "</span>" +
+      return '<div class="criadouro' + (i === 0 && v > 0 ? " lider" : "") + '"><span class="cod">' + (opts.simples ? i + 1 : k) + "</span>" +
         '<div class="desc">' + esc(d[0]) + "<small>" + esc(d[1]) + "</small></div>" +
         '<div class="barra" role="img" aria-label="' + v + ' depósitos"><i style="width:' + (max ? (v / max) * 100 : 0).toFixed(1) + '%"></i></div>' +
         '<div class="num"><b>' + L.fmtInt(v) + "</b> <small>" + L.fmtDec((v / soma) * 100, 1) + "%</small></div></div>";
@@ -131,7 +134,7 @@
       }
     };
     base.interaction = { mode: "index", intersect: false };
-    base.scales.y.title = { display: true, text: opts.soIip ? "% de imóveis positivos" : "por 100 imóveis pesquisados", color: L.css("--muted") };
+    base.scales.y.title = { display: true, text: opts.soIip ? "% de imóveis com focos" : "por 100 imóveis pesquisados", color: L.css("--muted") };
     base.scales.y.suggestedMax = 4.5;
     base.layout = { padding: { top: 16, right: 18 } };
     var conjuntos = opts.soIip ? [ds("IIP (%)", iip, s1)] : [ds("IIP (%)", iip, s1), ds("IB", ib, s2, true)];
