@@ -3,11 +3,13 @@ name: Atualizar LIRAa
 on:
   schedule:
     # Horários em UTC. Ponta Porã/MS = UTC−4 (sem horário de verão).
-    # 07:00 UTC = 03:00 (madrugada) e 16:00 UTC = 12:00 (almoço), horário local.
+    # 07:00 UTC = 03:00 (madrugada), 16:00 UTC = 12:00 (almoço) e
+    # 19:30 UTC = 15:30 (tarde), horário local.
     # Dias 3 a 15 de novembro. O cron não tem "ano": o scraper confere a
     # janela real (03/11/2026 a 15/11/2026) com --respeitar-janela, então
     # em novembro de 2027 em diante nada é coletado.
     - cron: '0 7,16 3-15 11 *'
+    - cron: '30 19 3-15 11 *'
   workflow_dispatch:          # execução manual pela aba Actions (ignora a janela)
     inputs:
       alvo:

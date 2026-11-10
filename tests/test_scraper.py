@@ -186,19 +186,18 @@ def test_workflow_cron_e_horarios_locais():
     with open(os.path.join(RAIZ, ".github", "workflows", "lira.yml"), encoding="utf-8") as f:
         wf = yaml.safe_load(f)
     crons = [s["cron"] for s in wf[True]["schedule"]]
-    assert crons == ["0 7,16 3-15 11 *"]
-    minuto, horas, dias, mes, _ = crons[0].split()
-    assert minuto == "0" and mes == "11"
+    assert crons == ["0 7,16 3-15 11 *", "30 19 3-15 11 *"]
+    assert all(c.split()[3] == "11" for c in crons)
 
     disparos = []
     d = datetime(2026, 1, 1, tzinfo=timezone.utc)
     while d.year == 2026:
-        if d.month == 11 and 3 <= d.day <= 15 and d.hour in (7, 16) and d.minute == 0:
+        if d.month == 11 and 3 <= d.day <= 15 and (d.hour, d.minute) in ((7, 0), (16, 0), (19, 30)):
             disparos.append(d)
-        d += timedelta(hours=1)
+        d += timedelta(minutes=30)
     locais = [x.astimezone(TZ) for x in disparos]
-    assert len(locais) == 26                                                    # 13 dias × 2
-    assert {x.hour for x in locais} == {3, 12}                                  # madrugada e almoço
+    assert len(locais) == 39                                                    # 13 dias × 3
+    assert {(x.hour, x.minute) for x in locais} == {(3, 0), (12, 0), (15, 30)}  # madrugada, almoço e tarde
     assert min(locais).date().isoformat() == "2026-11-03" and max(locais).date().isoformat() == "2026-11-15"
     assert all(ls.dentro_da_janela(x, ls.carregar_config()) for x in locais)
 

@@ -45,8 +45,8 @@ duplica.
 * **Novembro/2026** (`id_ciclo=165`, semanas `331-332`): levantamento corrente,
   coletado em toda execução e definido como Home (`"home"` no config).
 * **Agendamento** (`.github/workflows/lira.yml`): todos os dias de **03/11/2026
-  a 15/11/2026**, às **03:00** e **12:00** no horário de Ponta Porã (UTC−4) —
-  cron `0 7,16 3-15 11 *` em UTC. O scraper confere a janela real com
+  a 15/11/2026**, às **03:00**, **12:00** e **15:30** no horário de Ponta Porã (UTC−4) —
+  cron `0 7,16 3-15 11 *` e `30 19 3-15 11 *` em UTC. O scraper confere a janela real com
   `--respeitar-janela`, então nada roda fora dela (nem em novembro de 2027).
   A execução manual (“Run workflow”) ignora a janela.
 * Um levantamento com erro não impede os demais; resultados sem nenhum imóvel
