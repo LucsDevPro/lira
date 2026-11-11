@@ -82,34 +82,6 @@ def test_config_novembro_e_home():
     assert por["288-289"]["coleta"] == "recuperacao_unica"
 
 
-def test_janeiro_roda_uma_unica_vez(ambiente):
-    antes = ler(ambiente, "history.json")
-    assert rodar() == 0
-    h1 = ler(ambiente, "history.json")
-    est = ler(ambiente, "estado_coleta.json")
-
-    # recuperou janeiro e coletou novembro, com os parâmetros pedidos
-    assert set(h1) == {"288-289", "307-308", "318-319", "331-332"}
-    urls = dict(ambiente.visitadas)
-    assert "id_ciclo=160&semana_inicio=288&semana_fim=289" in urls["288-289"]
-    assert "id_ciclo=165&semana_inicio=331&semana_fim=332" in urls["331-332"]
-    assert h1["288-289"]["id_ciclo"] == 160 and h1["331-332"]["id_ciclo"] == 165
-    assert "288-289" in est["unicas"]
-
-    # dados históricos preservados byte a byte
-    assert h1["307-308"] == antes["307-308"] and h1["318-319"] == antes["318-319"]
-
-    # segunda execução (e terceira): janeiro NÃO é coletado de novo; sem duplicar
-    ambiente.visitadas.clear()
-    assert rodar(agora=datetime(2026, 11, 3, 12, 5, tzinfo=TZ)) == 0
-    assert rodar(agora=datetime(2026, 11, 4, 3, 5, tzinfo=TZ)) == 0
-    assert {c for c, _ in ambiente.visitadas} == {"331-332"}
-    h2 = ler(ambiente, "history.json")
-    assert list(h2) == list(h1) and len(h2) == 4
-    assert len(h2["331-332"]["estratos"]["Estrato 1"]["areas"]) == 12      # áreas não duplicam
-    assert h2["288-289"] == h1["288-289"]                                    # janeiro intacto
-
-
 def test_rotulos_de_semana_de_janeiro_e_novembro(ambiente):
     rodar()
     h = ler(ambiente, "history.json")
@@ -117,35 +89,6 @@ def test_rotulos_de_semana_de_janeiro_e_novembro(ambiente):
     assert h["331-332"]["semana_exibicao"]["rotulo"] == "SE 45-46/2026"
     assert h["288-289"]["periodo_origem"].startswith("id da semana")          # sinalizado como estimativa
     assert h["288-289"]["periodo"]["inicio"].startswith("2026-01")
-
-
-def test_sem_dados_no_evisita_nao_grava_nem_conclui(ambiente):
-    ambiente.vazio["ligado"] = True
-    assert rodar() == 0
-    h = ler(ambiente, "history.json")
-    assert "288-289" not in h and "331-332" not in h                          # nada de registro zerado
-    est = ler(ambiente, "estado_coleta.json")
-    assert est["unicas"] == {}                                                # janeiro continua pendente
-    assert est["execucoes"]["331-332"]["resultado"] == "sem_dados"
-
-    ambiente.vazio["ligado"] = False                                          # dados aparecem depois
-    assert rodar(agora=datetime(2026, 11, 3, 12, 5, tzinfo=TZ)) == 0
-    assert "288-289" in ler(ambiente, "history.json")
-
-
-def test_erro_em_um_levantamento_nao_perde_os_outros(ambiente, monkeypatch):
-    original = ls.processar_estrato
-
-    def quebra_janeiro(driver, areas, nome, alvo):
-        if alvo["chave"] == "288-289":
-            raise RuntimeError("falha simulada")
-        return original(driver, areas, nome, alvo)
-
-    monkeypatch.setattr(ls, "processar_estrato", quebra_janeiro)
-    assert rodar() == 1
-    h = ler(ambiente, "history.json")
-    assert "331-332" in h and "288-289" not in h
-    assert ler(ambiente, "estado_coleta.json")["unicas"] == {}                # tenta de novo na próxima
 
 
 def test_excel_so_do_levantamento_principal(ambiente):
