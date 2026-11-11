@@ -99,6 +99,10 @@ TZ_MS = timezone(timedelta(hours=-4))
 # DRIVER
 # =====================================================
 
+TENTATIVAS_AREA = 3      # novas tentativas da mesma página antes de desistir
+TENTATIVAS_ALVO = 2      # recomeça o levantamento com navegador novo se travar
+
+
 def criar_driver():
     options = Options()
 
@@ -122,9 +126,10 @@ def criar_driver():
     driver = webdriver.Chrome(options=options)
 
     # Limita o tempo de espera da comunicação Python <-> ChromeDriver.
-    # Em caso de timeout, a sessão será descartada e recriada.
+    # Precisa ser MAIOR que o page_load_timeout (90 s); se fosse menor, o Python
+    # desistiria antes do navegador e a coleta falharia numa página só lenta.
     try:
-        driver.command_executor.set_timeout(60)
+        driver.command_executor.set_timeout(180)
     except (AttributeError, TypeError):
         pass
 
@@ -392,10 +397,20 @@ def processar_estrato(driver, areas, nome_estrato, alvo):
             id_ano=alvo.get("id_ano", ID_ANO),
             id_ciclo=alvo["id_ciclo"],
         )
-        driver.get(url)
-        time.sleep(3)
+        html = None
+        for tentativa in range(1, TENTATIVAS_AREA + 1):
+            try:
+                driver.get(url)
+                time.sleep(3)
+                html = driver.page_source
+                break
+            except Exception as exc:  # página lenta/travada: tenta de novo a mesma área
+                print(f"[área {area}] tentativa {tentativa}/{TENTATIVAS_AREA} falhou: "
+                      f"{type(exc).__name__}", file=sys.stderr)
+                if tentativa == TENTATIVAS_AREA:
+                    raise
+                time.sleep(10)
 
-        html = driver.page_source
         dados = extrair_dados(html, area)
         resultados.append(dados)
 
@@ -703,7 +718,21 @@ def executar(args, criar=None, login=None, agora=None):
                 if alvo.get("id_ciclo") is None:
                     raise RuntimeError(f"id_ciclo não configurado para {chave}")
 
-                dfs, df_total = coletar_alvo(driver, alvo)
+                for tentativa_alvo in range(1, TENTATIVAS_ALVO + 1):
+                    try:
+                        dfs, df_total = coletar_alvo(driver, alvo)
+                        break
+                    except Exception as exc:
+                        if tentativa_alvo == TENTATIVAS_ALVO:
+                            raise
+                        # navegador travado: descarta e recomeça com sessão nova
+                        print(f"[recuperação] {alvo['nome']}: {type(exc).__name__}; "
+                              f"reiniciando navegador e login.", file=sys.stderr)
+                        try:
+                            driver.quit()
+                        except Exception:
+                            pass
+                        driver = criar_driver_e_fazer_login(criar=criar, login=login)
                 snapshot = construir_snapshot(alvo, dfs, df_total, agora, historico.get(chave))
 
                 if not tem_dados(snapshot):
