@@ -622,3 +622,33 @@ table.comp .pct { color: var(--muted); }
   .destaque.simples .destaque-info { padding: 22px 18px 18px; }
   .destaque.simples .destaque-regua { padding: 18px; }
 }
+
+/* ---------- Tabelas sem barra de rolagem (todas as páginas) ----------
+   Telas largas: a tabela encolhe (fonte e espaços fluidos, títulos quebram linha).
+   Telas estreitas: cada linha vira um cartão com "coluna: valor". */
+.tabela-scroll, .tabela-chart { overflow: visible !important; max-height: none !important; }
+table.dados { table-layout: auto; font-size: clamp(9.5px, .95cqw, 14px); }
+.tabela-scroll, .card.flush { container-type: inline-size; }
+table.dados .selo, table.dados .badge, table.dados [class*="selo"] { font-size: inherit !important; padding-inline: .5em !important; white-space: normal; }
+table.dados th, table.dados td { white-space: normal; overflow-wrap: normal; padding: clamp(5px, .8cqw, 14px) clamp(3px, .45cqw, 16px); }
+table.dados th { white-space: normal; position: static; font-size: clamp(9px, .85cqw, 12.5px); line-height: 1.25; vertical-align: bottom; }
+table.dados th:first-child, table.dados td:first-child { position: static; padding-left: clamp(8px, 1.2vw, 22px); }
+table.dados td:first-child { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+table.dados td:first-child, table.dados td.esq { white-space: normal; }
+
+@media (max-width: 860px) {
+  table.dados, table.dados tbody, table.dados tr, table.dados td { display: block; width: 100%; }
+  table.dados thead { display: none; }
+  table.dados tbody tr { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  table.dados tbody tr:last-child { border-bottom: 0; }
+  table.dados td, table.dados td:first-child { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 4px 0; border: 0; text-align: right; background: transparent; font-size: 14px; }
+  table.dados td:first-child { font-weight: 800; font-size: 15px; justify-content: flex-start; text-align: left; padding-bottom: 8px; }
+  table.dados td::before { content: attr(data-label); color: var(--muted); font-weight: 600; font-size: 12.5px; text-align: left; flex: 0 1 46%; }
+  table.dados td:first-child::before { display: none; }
+  table.dados tbody tr:hover td { background: transparent; }
+  table.dados tr.grupo { padding: 0; }
+  table.dados tr.grupo th { display: block; }
+  table.dados tr.total { background: var(--surface-2); }
+  .heat td.heat-cel { text-align: right; }
+  table.dados td[data-zero] { display: none; }
+}

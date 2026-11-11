@@ -500,3 +500,31 @@
     temaEfetivo: temaEfetivo
   };
 })(window);
+
+/* Tabelas sem barra de rolagem: copia o título de cada coluna para as células
+   (data-label), para o CSS empilhar a tabela em cartões em telas estreitas. */
+(function () {
+  function rotular(tab) {
+    var cab = tab.querySelector("thead tr:last-child");
+    if (!cab) return;
+    var nomes = Array.prototype.map.call(cab.children, function (th) { return (th.textContent || "").replace(/[↑↓]/g, "").trim(); });
+    Array.prototype.forEach.call(tab.querySelectorAll("tbody tr"), function (tr) {
+      if (tr.classList.contains("grupo")) return;
+      Array.prototype.forEach.call(tr.children, function (td, i) {
+        if (nomes[i] && td.getAttribute("data-label") !== nomes[i]) td.setAttribute("data-label", nomes[i]);
+        // no celular, esconde contagens zeradas das colunas de depósitos (encurta o cartão)
+        if (i > 0 && /^(A1|A2|B|C|D1|D2|E|TB|Resto|Dep|Imóveis Ae|Imóveis c)/.test(nomes[i]) && td.textContent.trim() === "0") td.setAttribute("data-zero", "1");
+      });
+    });
+  }
+  function varrer(raiz) {
+    Array.prototype.forEach.call((raiz || document).querySelectorAll("table.dados"), rotular);
+  }
+  var pendente = false;
+  function agendar() { if (pendente) return; pendente = true; requestAnimationFrame(function () { pendente = false; varrer(); }); }
+  function iniciar() {
+    varrer();
+    if (window.MutationObserver) new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
+})();
